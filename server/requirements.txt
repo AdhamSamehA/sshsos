@@ -1,0 +1,9 @@
+asyncpg
+sqlalchemy[asyncio]
+python-dotenv
+sqlalchemy-utils
+fastapi
+uvicorn
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
