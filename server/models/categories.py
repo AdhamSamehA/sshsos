@@ -1,0 +1,2 @@
+### category id
+### category name: (Dairy & Eggs, Fruits & Vegetables, Bakery, Nuts & Seeds, Chips & Snacks, Cereals & Packets, Hygiene & Personal Care, Stationary)
