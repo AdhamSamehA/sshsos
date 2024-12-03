@@ -7,10 +7,8 @@
 ### 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from dependencies import get_db
-from schemas.cart import CreateCartRequest, CartResponse, AddItemRequest, RemoveItemRequest, UpdateCartRequest, ViewCartResponse, CartItem
-
-
+from server.dependencies import get_db
+from server.schemas import CreateCartRequest, CartResponse, AddItemRequest, RemoveItemRequest, UpdateCartRequest, ViewCartResponse, CartItem
 
 
 
@@ -163,4 +161,34 @@ async def update_cart(cart_id: int, request: UpdateCartRequest, db: AsyncSession
         cart_id=cart_id,
         supermarket_id=1,  # Placeholder supermarket_id for mock response
         message="Cart updated successfully"
+    )
+
+###### 6
+@router.get("/carts/{cart_id}", response_model=ViewCartResponse)
+async def view_cart(cart_id: int, db: AsyncSession = Depends(get_db)) -> ViewCartResponse:
+    """
+    Overview:
+    View the contents of the specified cart.
+
+    Function Logic:
+    1. Accepts cart_id as input.
+    2. Retrieves the cart details from the database, including items, quantities, total price, photos, and wallet balance.
+    3. Returns the cart details.
+
+    Parameters:
+    - cart_id (int): The ID of the cart to view.
+    - db (AsyncSession): The database session dependency for querying data.
+
+    Returns:
+    - A JSON response conforming to the ViewCartResponse model.
+    """
+    # Mock response for frontend testing
+    return ViewCartResponse(
+        cart_id=cart_id,
+        items=[
+            CartItem(item_id=1, name="Apple", quantity=3, price=1.5, photo_url="http://example.com/apple.jpg"),
+            CartItem(item_id=2, name="Banana", quantity=2, price=1.0, photo_url="http://example.com/banana.jpg")
+        ],
+        total_price=6.0,
+        wallet_balance=50.0
     )

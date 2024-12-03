@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import uvicorn
 from dotenv import load_dotenv
-#from server.api import api_router
+from .api import master_router
 from .database import setup_database
 
 # Load environment variables from .env
@@ -12,7 +12,7 @@ load_dotenv()
 app = FastAPI()
 
 ## API VERSION: 1
-#app.include_router(api_router, tags=["API Router"])
+app.include_router(master_router, tags=["API Router"])
 
 
 # Add CORS middleware to allow specific origins or all
