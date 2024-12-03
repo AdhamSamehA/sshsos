@@ -19,3 +19,4 @@ class Supermarket(Base):
 
     items = relationship("Item", back_populates="supermarket")
     order_slots = relationship("OrderSlot", back_populates="supermarket")
+    supermarket_categories = relationship("SupermarketCategory", back_populates="supermarket")
