@@ -10,6 +10,7 @@ from .user import User
 from .user_orders import UserOrder
 from .stock_levels import StockLevel
 from .wallet import Wallet
+from .supermarket_categories import SupermarketCategory
 from .base import Base
 
 

@@ -13,3 +13,5 @@ class Category(Base):
     name = Column(String, nullable=False)
 
     items = relationship("Item", back_populates="category")
+
+    supermarket_categories = relationship("SupermarketCategory", back_populates="category")
