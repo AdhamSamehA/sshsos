@@ -13,6 +13,7 @@ class Supermarket(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
+    photo_url = Column(String)
     address = Column(String, nullable=False)
     phone_number = Column(String, nullable=False)
 
