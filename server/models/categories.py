@@ -1,6 +1,6 @@
 ### category id
 ### category name: (Dairy & Eggs, Fruits & Vegetables, Bakery, Nuts & Seeds, Chips & Snacks, Cereals & Packets, Hygiene & Personal Care, Stationary)
-
+from sqlalchemy import UniqueConstraint
 from sqlalchemy import Column, Integer, String, ForeignKey, Float, DateTime
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -15,3 +15,7 @@ class Category(Base):
     items = relationship("Item", back_populates="category")
 
     supermarket_categories = relationship("SupermarketCategory", back_populates="category")
+
+    __table_args__ = (
+        UniqueConstraint('id', 'name', name='uq_supermarket_id_name'),  # Composite unique constraint
+    )

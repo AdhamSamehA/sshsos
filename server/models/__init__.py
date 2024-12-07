@@ -2,6 +2,7 @@ from .addresses import Address
 from .carts import Cart
 from .categories import Category
 from .items import Item
+from .cart_items import CartItems  
 from .order_items import OrderItem
 from .order_slots import OrderSlot
 from .order import Order

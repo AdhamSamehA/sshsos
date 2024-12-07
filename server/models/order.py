@@ -28,8 +28,12 @@ class Order(Base):
     delivery_fee = Column(Float, nullable=False)
     status = Column(Enum(OrderStatus), default=OrderStatus.PENDING)
     supermarket_id = Column(Integer, ForeignKey('supermarkets.id'))
+    cart_id = Column(Integer, ForeignKey('carts.id'))
+    order_slot_id = Column(Integer, ForeignKey('order_slots.id'))
 
     user = relationship("User", back_populates="orders")
     address = relationship("Address")
     order_items = relationship("OrderItem", back_populates="order")
     supermarket = relationship("Supermarket")
+    cart = relationship("Cart", back_populates="orders")
+    order_slot = relationship("OrderSlot", back_populates="orders") 

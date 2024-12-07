@@ -13,6 +13,9 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
+    default_address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True)
 
     orders = relationship("Order", back_populates="user")
     user_orders = relationship("UserOrder", back_populates="user")
+    default_address = relationship("Address")
+    cart = relationship("Cart", back_populates="user")

@@ -11,7 +11,8 @@ class OrderSlot(Base):
     __tablename__ = 'order_slots'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    order_slot = Column(String, nullable=False)
-    supermarket_id = Column(Integer, ForeignKey('supermarkets.id'))
+    supermarket_id = Column(Integer, ForeignKey("supermarkets.id"))
+    delivery_time = Column(String, nullable=False)
 
     supermarket = relationship("Supermarket", back_populates="order_slots")
+    orders = relationship("Order", back_populates="order_slot")

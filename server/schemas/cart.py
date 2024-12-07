@@ -1,7 +1,7 @@
 #put all requests and responses related to cart API here
 
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class CreateCartRequest(BaseModel):
     supermarket_id: int
@@ -24,14 +24,21 @@ class RemoveItemRequest(BaseModel):
 #view cart
 class CartItem(BaseModel):
     item_id: int
-    name: str
+    name: Optional[str] = None
     quantity: int
     price: float
     photo_url: str
 
+class CartItemResponse(BaseModel):
+    item_id: int
+    name: str
+    quantity: int
+    price: float
+    photo_url: str   
+
 class ViewCartResponse(BaseModel):
     cart_id: int
-    items: List[CartItem]
+    items: List[CartItemResponse]
     total_price: float
     wallet_balance: float
 

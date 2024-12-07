@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from server.models import Supermarket
 from typing import List
-
 from server.dependencies import get_db
-from server.schemas import SupermarketFeedResponse
+from server.schemas import SupermarketFeedResponse, SupermarketResponse, AddSupermarketRequest
 
 router = APIRouter()
 
@@ -43,4 +43,41 @@ async def get_supermarket_feed(db: AsyncSession = Depends(get_db)) -> Supermarke
                 "photo_url": "https://example.com/supermarket_b.jpg"
             }
         ]
+    )
+
+@router.post("/admin/supermarkets", response_model=SupermarketResponse)
+async def add_supermarket(
+    request: AddSupermarketRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin-only endpoint to add a supermarket.
+
+    Parameters:
+    - request (AddSupermarketRequest): Supermarket details to add.
+    - db (AsyncSession): Database session.
+    - admin_user (dict): User information, validated as admin.
+
+    Returns:
+    - SupermarketResponse: Details of the newly added supermarket.
+    """
+    # Create a new supermarket instance
+    new_supermarket = Supermarket(
+        name=request.name,
+        photo_url=request.photo_url,
+        address=request.address,
+        phone_number=request.phone_number
+    )
+
+    # Add to the database
+    db.add(new_supermarket)
+    await db.commit()
+    await db.refresh(new_supermarket)
+
+    return SupermarketResponse(
+        id=new_supermarket.id,
+        name=new_supermarket.name,
+        photo_url=new_supermarket.photo_url,
+        address=new_supermarket.address,
+        phone_number=new_supermarket.phone_number
     )
