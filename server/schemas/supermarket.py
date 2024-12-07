@@ -13,4 +13,18 @@ class SupermarketFeedResponse(BaseModel):
     supermarkets: List[Supermarket]
 
 
+class AddSupermarketRequest(BaseModel):
+    name: str
+    photo_url: str
+    address: str
+    phone_number: str
+
+class SupermarketResponse(BaseModel):
+    id: int
+    name: str
+    photo_url: str
+    address: str
+    phone_number: str
+
+
 

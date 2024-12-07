@@ -4,7 +4,7 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from .api import master_router
-from .database import setup_database
+from .database import setup_database, populate_database, drop_all_tables
 
 # Load environment variables from .env
 load_dotenv()
@@ -27,8 +27,9 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
+    await drop_all_tables()
     await setup_database()
-    # Add any other functions that need to be executed upon starting the application
+    await populate_database()
 
 # Testing Endpoint
 @app.get('/')

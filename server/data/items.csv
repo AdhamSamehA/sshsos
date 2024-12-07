@@ -1,0 +1,17 @@
+name,photo_url,price,description,category_id,supermarket_id
+Milk,https://example.com/milk.jpg,4.50,Fresh cow milk,1,1
+Eggs,https://example.com/eggs.jpg,5.00,Organic eggs (12 pcs),1,1
+Apple,https://example.com/apple.jpg,3.20,Fresh red apples,2,1
+Banana,https://example.com/banana.jpg,2.50,Organic bananas (1 kg),2,1
+Bread,https://example.com/bread.jpg,2.00,Whole grain bread,3,1
+Croissant,https://example.com/croissant.jpg,3.00,Buttery croissant,3,1
+Almonds,https://example.com/almonds.jpg,6.50,Raw almonds (200g),4,1
+Cashews,https://example.com/cashews.jpg,7.00,Roasted cashews (200g),4,1
+Potato Chips,https://example.com/chips.jpg,1.50,Classic salted chips,5,1
+Popcorn,https://example.com/popcorn.jpg,2.00,Butter popcorn,5,1
+Cornflakes,https://example.com/cornflakes.jpg,3.50,Healthy cornflakes (500g),6,1
+Oatmeal,https://example.com/oatmeal.jpg,4.00,Organic oatmeal (1 kg),6,1
+Toothpaste,https://example.com/toothpaste.jpg,2.50,Herbal toothpaste,7,1
+Shampoo,https://example.com/shampoo.jpg,5.00,Natural shampoo,7,1
+Notebook,https://example.com/notebook.jpg,1.00,College ruled notebook,8,1
+Pen,https://example.com/pen.jpg,0.50,Blue ballpoint pen,8,1
