@@ -33,14 +33,14 @@ async def get_supermarket_feed(db: AsyncSession = Depends(get_db)) -> Supermarke
                 "name": "Supermarket A",
                 "address": "123 Main St, City",
                 "phone_number": "123-456-7890",
-                "photo_url": "https://example.com/supermarket_a.jpg"
+                "photo_url": "https://www.dealzbook.ae/filemanager/uploads/myviva-logo.webp"
             },
             {
                 "id": 2,
                 "name": "Supermarket B",
                 "address": "456 Elm St, Town",
                 "phone_number": "987-654-3210",
-                "photo_url": "https://example.com/supermarket_b.jpg"
+                "photo_url": "https://t4.ftcdn.net/jpg/02/98/00/31/360_F_298003130_m46tOGOvzZjxXjP61HjVxY5awE9qU406.jpg"
             }
         ]
     )
