@@ -1,16 +1,25 @@
 import React from 'react';
-import Supermarkets from './components/supermarkets';  // Import the Supermarkets component
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Supermarkets from './components/supermarkets';
+import SupermarketShopping from './components/SupermarketShopping';
+import Items from './components/Items';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Supermarket Delivery Service</h1>
-      </header>
-      <main>
-        <Supermarkets />  {/* Use the Supermarkets component here */}
-      </main>
-    </div>
+    <Router>
+      <div className="App">
+        <header className="App-header">
+          <h1>SSH Delivery Service</h1>
+        </header>
+        <main>
+          <Routes>
+            <Route path="/" element={<Supermarkets />} />
+            <Route path="/supermarketshopping/:supermarketId" element={<SupermarketShopping />} />
+            <Route path="/items/:supermarketId/:categoryId" element={<Items />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }
 
