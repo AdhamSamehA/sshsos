@@ -226,10 +226,11 @@ async def view_my_orders(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Fetch all orders placed by the specified user with a detailed item breakdown.
+    Fetch all normal orders placed by the specified user with a detailed item breakdown.
+    Excludes shared orders.
     """
     try:
-        # Query orders for the user
+        # Query normal orders for the user (exclude shared_cart_id)
         result = await db.execute(
             select(Order)
             .options(
@@ -237,7 +238,7 @@ async def view_my_orders(
                 joinedload(Order.address),
                 joinedload(Order.supermarket),
             )
-            .where(Order.user_id == user_id)
+            .where(Order.user_id == user_id, Order.shared_cart_id.is_(None))  # Exclude shared orders
         )
         orders = result.unique().scalars().all()  # Use .unique() to handle joined eager loads
 

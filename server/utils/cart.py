@@ -282,13 +282,28 @@ async def handle_schedule_order(cart_id: int, request: SubmitDeliveryDetailsRequ
     if not cart:
         raise HTTPException(status_code=400, detail="Cart is inactive or does not exist.")
 
-    # Check if the cart is already associated with an order
+    # Check if an order has already been placed for this cart_id
     existing_order_result = await db.execute(
         select(Order).where(Order.cart_id == cart_id, Order.status != OrderStatus.CANCELED)
     )
     existing_order = existing_order_result.scalars().first()
     if existing_order:
         raise HTTPException(status_code=400, detail="An order has already been placed for this cart.")
+
+    # Check if an order has been placed for a shared cart associated with this cart
+    shared_cart_result = await db.execute(
+        select(SharedCart.id).join(SharedCartContributor)
+        .where(SharedCartContributor.user_id == cart.user_id)
+    )
+    shared_cart_id = shared_cart_result.scalars().first()
+
+    if shared_cart_id:
+        shared_cart_order_result = await db.execute(
+            select(Order).where(Order.shared_cart_id == shared_cart_id, Order.status != OrderStatus.CANCELED)
+        )
+        shared_cart_order = shared_cart_order_result.scalars().first()
+        if shared_cart_order:
+            raise HTTPException(status_code=400, detail="An order has already been placed for the associated shared cart.")
 
     # Fetch the order slot
     order_slot = await get_order_slot(request.order_time, request.supermarket_id, db)

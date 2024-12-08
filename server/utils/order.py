@@ -1,13 +1,24 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import joinedload
 from datetime import datetime
-from server.dependencies import AsyncSession
-from server.models import SharedCart, Wallet, Supermarket, Order, OrderSlot, SharedCartContributor, WalletTransaction, OrderItem
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from collections import defaultdict
+import asyncio
+
+from server.models import (
+    SharedCart,
+    Wallet,
+    Supermarket,
+    Order,
+    OrderSlot,
+    SharedCartContributor,
+    WalletTransaction,
+    OrderItem,
+)
 from server.models.shared_cart import SharedCartStatus
 from server.models.order import OrderStatus
 from server.models.wallet_transaction import TransactionType
-from sqlalchemy import select
-import asyncio
 
 
 def parse_delivery_time(delivery_time: str) -> datetime:
@@ -23,17 +34,15 @@ async def automated_order_placement(db: AsyncSession, shared_cart_id: int, delay
     Automatically place the order for the shared cart after the specified delay.
     Includes refund logic for delivery fee adjustments.
     """
-    # Wait for the delay
     await asyncio.sleep(delay)
 
     try:
-        # Fetch the shared cart and related data
         shared_cart_result = await db.execute(
             select(SharedCart)
             .options(
-                joinedload(SharedCart.contributors),
+                joinedload(SharedCart.contributors).joinedload(SharedCartContributor.user),
                 joinedload(SharedCart.shared_cart_items),
-                joinedload(SharedCart.supermarket),  # Load supermarket relationship
+                joinedload(SharedCart.supermarket),
             )
             .where(SharedCart.id == shared_cart_id)
         )
@@ -41,35 +50,36 @@ async def automated_order_placement(db: AsyncSession, shared_cart_id: int, delay
         if not shared_cart:
             raise HTTPException(status_code=400, detail="Shared cart not found.")
 
-        # Fetch delivery fee
         delivery_fee = shared_cart.supermarket.delivery_fee
         if delivery_fee is None:
             raise HTTPException(status_code=400, detail="Supermarket delivery fee not set.")
 
-        # Fetch contributors
-        contributors_result = await db.execute(
-            select(SharedCartContributor)
-            .where(SharedCartContributor.shared_cart_id == shared_cart_id)
-        )
-        contributors = contributors_result.scalars().all()
+        contributors = shared_cart.contributors
         if not contributors:
             raise HTTPException(status_code=400, detail="No contributors found in the shared cart.")
 
-        # Use the first contributor as the organizer
-        organizer = contributors[0]  # Assumes the first contributor is the organizer
+        await update_delivery_fee_contribution(db, shared_cart)
 
-        # Update delivery fee contributions and handle refunds
-        await update_delivery_fee_contribution(db, shared_cart_id)
-
-        # Calculate total item costs
         total_item_cost = sum(
             item.price * item.quantity for item in shared_cart.shared_cart_items
         )
 
-        # Create the shared order
+        existing_order_result = await db.execute(
+        select(Order).where(Order.shared_cart_id == shared_cart.id, Order.status != OrderStatus.CANCELED)
+        )
+        existing_order = existing_order_result.scalars().first()
+        if existing_order:
+            raise HTTPException(status_code=400, detail="An order has already been placed for this shared cart.")
+        
+        # Aggregate items by item_id
+        aggregated_items = await aggregate_shared_cart_items(shared_cart.shared_cart_items)
+
+        # Calculate total item costs
+        total_item_cost = sum(data["total_price"] for data in aggregated_items.values())
+
         order = await create_order(
             db=db,
-            user_id=organizer.user_id,  # Use the organizer's user ID
+            user_id=contributors[0].user_id,  # First contributor as organizer
             supermarket_id=shared_cart.supermarket_id,
             address_id=shared_cart.address_id,
             delivery_fee=delivery_fee,
@@ -78,13 +88,14 @@ async def automated_order_placement(db: AsyncSession, shared_cart_id: int, delay
             order_slot_id=shared_cart.order_slot_id,
             status=OrderStatus.COMPLETED,
         )
-        
-        for shared_cart_item in shared_cart.shared_cart_items:
+
+        # Add aggregated items to the order
+        for item_id, data in aggregated_items.items():
             order_item = OrderItem(
                 order_id=order.id,
-                item_id=shared_cart_item.item_id,
-                quantity=shared_cart_item.quantity,
-                price=shared_cart_item.price,
+                item_id=item_id,
+                quantity=data["quantity"],
+                price=data["total_price"] / data["quantity"], 
             )
             db.add(order_item)
 
@@ -96,7 +107,7 @@ async def automated_order_placement(db: AsyncSession, shared_cart_id: int, delay
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
-    
+
 
 async def create_order(
     db: AsyncSession,
@@ -110,9 +121,6 @@ async def create_order(
     order_slot_id: int = None,
     status: OrderStatus = OrderStatus.PENDING,
 ):
-    """
-    Create an order in the database for individual or shared cart scenarios.
-    """
     order = Order(
         user_id=user_id,
         supermarket_id=supermarket_id,
@@ -130,6 +138,60 @@ async def create_order(
     return order
 
 
+async def update_delivery_fee_contribution(db: AsyncSession, shared_cart: SharedCart):
+    """
+    Update delivery_fee_contribution for all contributors in the shared cart.
+    """
+    delivery_fee = shared_cart.supermarket.delivery_fee or 0.0
+    contributors = shared_cart.contributors
+    num_contributors = len(contributors)
+
+    if num_contributors == 0:
+        raise HTTPException(status_code=400, detail="No contributors found.")
+
+    new_contribution = delivery_fee / num_contributors
+
+    for contributor in contributors:
+        user = contributor.user
+        wallet_result = await db.execute(select(Wallet).where(Wallet.user_id == user.id))
+        wallet = wallet_result.scalars().first()
+
+        if not wallet:
+            raise HTTPException(status_code=400, detail=f"Wallet not found for user_id {user.id}.")
+
+        refund_amount = contributor.delivery_fee_contribution - new_contribution
+        contributor.delivery_fee_contribution = new_contribution
+
+        if refund_amount > 0:
+            refund_transaction = WalletTransaction(
+                wallet_id=wallet.id,
+                user_id=user.id,
+                amount=refund_amount,
+                transaction_type=TransactionType.CREDIT,
+                created_at=datetime.utcnow(),
+            )
+            db.add(refund_transaction)
+
+        db.add(contributor)
+
+    await db.commit()
+
+
+async def aggregate_shared_cart_items(shared_cart_items):
+    """
+    Aggregate items from the shared cart by item_id.
+    """
+    aggregated_items = defaultdict(lambda: {"quantity": 0, "total_price": 0.0})
+
+    for shared_cart_item in shared_cart_items:
+        item_id = shared_cart_item.item_id
+        aggregated_items[item_id]["quantity"] += shared_cart_item.quantity
+        aggregated_items[item_id]["total_price"] += shared_cart_item.quantity * shared_cart_item.price
+
+    return aggregated_items
+
+
+
 async def get_order_slot(slot : str, supermarket_id : int, db: AsyncSession) -> OrderSlot:
     """
     Fetch the 'now' order slot
@@ -140,77 +202,3 @@ async def get_order_slot(slot : str, supermarket_id : int, db: AsyncSession) -> 
     now_slot = result.scalars().first()
 
     return now_slot
-
-
-async def update_delivery_fee_contribution(db: AsyncSession, shared_cart_id: int):
-    """
-    Update delivery_fee_contribution for all contributors in the shared cart.
-    The delivery fee is divided equally among all contributors.
-    Includes refund logic for overpayments.
-    """
-    try:
-        # Fetch shared cart with contributors and supermarket
-        shared_cart_result = await db.execute(
-            select(SharedCart)
-            .options(
-                joinedload(SharedCart.supermarket),
-                joinedload(SharedCart.contributors).joinedload(SharedCartContributor.user),
-            )
-            .where(SharedCart.id == shared_cart_id)
-        )
-        shared_cart = shared_cart_result.scalars().first()
-        if not shared_cart:
-            raise HTTPException(status_code=400, detail="Shared cart not found.")
-
-        # Fetch the delivery fee from the supermarket
-        delivery_fee = shared_cart.supermarket.delivery_fee
-        if delivery_fee is None:
-            raise HTTPException(status_code=400, detail="Supermarket delivery fee not set.")
-
-        # Get the contributors
-        contributors = shared_cart.contributors
-        num_contributors = len(contributors)
-        if num_contributors == 0:
-            raise HTTPException(status_code=400, detail="No contributors found in the shared cart.")
-
-        # Calculate the new delivery_fee_contribution
-        new_contribution = delivery_fee / num_contributors
-
-        # Update contributors and issue refunds if necessary
-        for contributor in contributors:
-            user = contributor.user  # Fetch the related User object
-            if not user:
-                raise HTTPException(status_code=400, detail="Contributor user record not found.")
-
-            # Fetch the wallet for the contributor
-            wallet_result = await db.execute(
-                select(Wallet).where(Wallet.user_id == user.id)
-            )
-            wallet = wallet_result.scalars().first()
-            if not wallet:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Wallet not found for user_id {user.id}."
-                )
-
-            previous_contribution = contributor.delivery_fee_contribution
-            contributor.delivery_fee_contribution = new_contribution
-            refund_amount = previous_contribution - new_contribution
-
-            if refund_amount > 0:
-                # Issue refund via wallet transaction
-                refund_transaction = WalletTransaction(
-                    wallet_id=wallet.id,
-                    user_id=user.id,
-                    amount=refund_amount,
-                    transaction_type=TransactionType.CREDIT,
-                    created_at=datetime.utcnow(),
-                )
-                db.add(refund_transaction)
-
-            db.add(contributor)
-
-        await db.commit()
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")

@@ -45,4 +45,5 @@ class Order(Base):
 
     __table_args__ = (
         UniqueConstraint('cart_id', name='uq_cart_order'),
+        UniqueConstraint('shared_cart_id', name='uq_shared_cart_order')
     )
