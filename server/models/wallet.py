@@ -12,9 +12,14 @@ class Wallet(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    balance = Column(Float, default=0.0)
+    #balance = Column(Float, default=0.0)
 
-    user = relationship("User")
+    user = relationship("User", back_populates="wallet")
+    transactions = relationship(
+    "WalletTransaction",
+    back_populates="wallet",
+    cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         UniqueConstraint('user_id', name='uq_user_wallet'),

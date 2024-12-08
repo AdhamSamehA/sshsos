@@ -12,6 +12,10 @@ from .user_orders import UserOrder
 from .stock_levels import StockLevel
 from .wallet import Wallet
 from .supermarket_categories import SupermarketCategory
+from .shared_cart import SharedCart
+from .shared_cart_contributor import SharedCartContributor
+from .shared_cart_item import SharedCartItem
+from .wallet_transaction import WalletTransaction
 from .base import Base
 
 

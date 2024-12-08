@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 from sqlalchemy.future import select
-from server.models import Cart, Supermarket, Item, StockLevel, User, CartItems, Wallet
+from server.models import Cart, Supermarket, Item, StockLevel, User, CartItems, WalletTransaction
 from server.dependencies import get_db
 from server.schemas import CreateCartRequest, CartResponse, AddItemRequest, RemoveItemRequest, UpdateCartRequest, ViewCartResponse, CartItem, CartItemResponse
 from typing import List
@@ -306,17 +307,15 @@ async def view_cart(cart_id: int, db: AsyncSession = Depends(get_db)) -> ViewCar
         items.append(CartItemResponse(**item_data))
         total_price += cart_item.quantity * item.price
 
-    # Retrieve wallet balance
-    stmt = select(Wallet.balance).where(Wallet.user_id == cart.user_id)
-    result = await db.execute(stmt)
-    wallet_balance = result.scalar_one_or_none() or 0.0
+    # Fetch wallet balance dynamically
+    stmt = select(func.sum(WalletTransaction.amount)).where(WalletTransaction.user_id == cart.user_id)
+    wallet_balance = (await db.execute(stmt)).scalar() or 0.0
 
-    # Return the cart details
     return ViewCartResponse(
         cart_id=cart.id,
         items=items,
         total_price=total_price,
-        wallet_balance=wallet_balance,
+        wallet_balance=wallet_balance
     )
 
 
