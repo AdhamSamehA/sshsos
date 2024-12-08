@@ -33,6 +33,7 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       DATABASE_NAME: ${DATABASE_NAME}
       SERVER_PORT: ${SERVER_PORT}
+      ENVIRONMENT: ${ENVIRONMENT}
     depends_on:
       db:
         condition: service_healthy

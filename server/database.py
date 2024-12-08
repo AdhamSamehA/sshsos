@@ -101,7 +101,8 @@ async def populate_supermarkets(session: AsyncSession, file_path: str):
             name=row["name"],             
             address=row["address"],       
             phone_number=row["phone_number"],
-            photo_url=row.get("photo_url")  # Optional field
+            photo_url=row.get("photo_url"),
+            delivery_fee=row['delivery_fee']
         )
         session.add(supermarket)
 

@@ -1,183 +1,349 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import joinedload
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from server.dependencies import get_db
-from server.schemas import SubmitDeliveryDetailsRequest, SubmitDeliveryDetailsResponse, PaymentSummaryResponse, CancelOrderResponse, TrackOrderResponse, OrderSlotsResponse, AddressesResponse, Address, CartItem
-
-
+from server.schemas import SubmitDeliveryDetailsRequest, SubmitDeliveryDetailsResponse, PaymentSummaryResponse, CancelOrderResponse, TrackOrderResponse, OrderSlotsResponse, AddressesResponse, CartItem, OrderItemDetail, OrderDetail, ContributorDetail, SharedOrderDetail, AddressResponse, OrderDetailResponse
+from server.models import SharedCartItem, Order, SharedCart, SharedCartContributor, OrderItem, OrderSlot, Address
+from typing import List
 router = APIRouter()
-
-@router.post("/orders/{order_id}/submit-delivery", response_model=SubmitDeliveryDetailsResponse)
-async def submit_delivery_details(order_id: int, request: SubmitDeliveryDetailsRequest, db: AsyncSession = Depends(get_db)) -> SubmitDeliveryDetailsResponse:
-    """
-    Overview:
-    Submit the delivery details for the specified order.
-
-    Function Logic:
-    1. Accepts order_id and delivery details (address and order time) as input.
-    2. Updates the order in the database with the delivery details.
-    3. Returns a confirmation message and delivery time.
-
-    Parameters:
-    - order_id (int): The ID of the order to update.
-    - request (SubmitDeliveryDetailsRequest): Contains the address ID and order time for the delivery.
-    - db (AsyncSession): The database session dependency for querying and updating data.
-
-    Returns:
-    - A JSON response conforming to the SubmitDeliveryDetailsResponse model.
-    """
-    # Mock response for frontend testing
-    delivery_time = "now" if request.order_time == "now" else f"Scheduled at {request.order_time}"
-    return SubmitDeliveryDetailsResponse(
-        order_id=order_id,
-        delivery_time=delivery_time,
-        message="Delivery details submitted successfully"
-    )
-
 
 @router.get("/orders/{order_id}/payment-summary", response_model=PaymentSummaryResponse)
 async def display_payment_summary(order_id: int, db: AsyncSession = Depends(get_db)) -> PaymentSummaryResponse:
     """
-    Overview:
     Display the payment summary for the specified order.
-
-    Function Logic:
-    1. Accepts order_id as input.
-    2. Retrieves the basket value and delivery fee for the order from the database.
-    3. Calculates the total amount (basket value + delivery fee).
-    4. Returns the payment summary.
-
-    Parameters:
-    - order_id (int): The ID of the order for which the payment summary is being displayed.
-    - db (AsyncSession): The database session dependency for querying data.
-
-    Returns:
-    - A JSON response conforming to the PaymentSummaryResponse model.
     """
-    # Mock response for frontend testing
-    basket_value = 50.0  # Placeholder value for basket
-    delivery_fee = 5.0   # Placeholder value for delivery fee
-    total_amount = basket_value + delivery_fee
-    items = [
-        CartItem(item_id=1, name="Apple", quantity=3, price=1.5),
-        CartItem(item_id=2, name="Banana", quantity=2, price=1.0)
-    ]
-    return PaymentSummaryResponse(
-        order_id=order_id,
-        basket_value=basket_value,
-        delivery_fee=delivery_fee,
-        total_amount=total_amount,
-        items=items
-    )
+    try:
+        # Fetch the order with related items and details
+        result = await db.execute(
+            select(Order)
+            .options(
+                joinedload(Order.order_items).joinedload(OrderItem.item)
+            )
+            .where(Order.id == order_id)
+        )
+        order = result.scalars().first()
+
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found.")
+
+        # Calculate basket value
+        basket_value = sum(
+            item.price * item.quantity for item in order.order_items
+        )
+
+        # Retrieve delivery fee
+        delivery_fee = order.delivery_fee or 0.0
+
+        # Calculate total amount
+        total_amount = basket_value + delivery_fee
+
+        # Build item details
+        items = [
+            CartItem(
+                item_id=item.item.id,
+                name=item.item.name,
+                quantity=item.quantity,
+                price=item.price,
+            )
+            for item in order.order_items
+        ]
+
+        return PaymentSummaryResponse(
+            order_id=order.id,
+            basket_value=basket_value,
+            delivery_fee=delivery_fee,
+            total_amount=total_amount,
+            items=items,
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve payment summary: {e}")
     
 
-
-
-
-@router.post("/orders/{order_id}/cancel", response_model=CancelOrderResponse)
-async def cancel_order(order_id: int, db: AsyncSession = Depends(get_db)) -> CancelOrderResponse:
+@router.get("/order/details", response_model=OrderDetailResponse)
+async def get_order_details(
+    order_id: int = Query(..., description="The ID of the order to fetch details for"),
+    db: AsyncSession = Depends(get_db)
+):
     """
-    Overview:
-    Cancel the specified order.
-
-    Function Logic:
-    1. Accepts order_id as input.
-    2. Updates the order status in the database to 'cancelled'.
-    3. Returns a confirmation message.
+    Fetch detailed information for a specific order (normal or shared).
 
     Parameters:
-    - order_id (int): The ID of the order to be cancelled.
-    - db (AsyncSession): The database session dependency for querying and updating data.
+    - order_id: ID of the order to fetch details.
 
     Returns:
-    - A JSON response conforming to the CancelOrderResponse model.
+    - Detailed information about the order, including items, contributors (for shared orders), and costs.
     """
-    # Mock response for frontend testing
-    return CancelOrderResponse(
-        order_id=order_id,
-        message="Order has been cancelled successfully"
-    )
+    try:
+        # Query the Order table with joined relationships
+        result = await db.execute(
+            select(Order)
+            .options(
+                joinedload(Order.order_items).joinedload(OrderItem.item),
+                joinedload(Order.shared_cart).joinedload(SharedCart.shared_cart_items).joinedload(SharedCartItem.item),
+                joinedload(Order.shared_cart).joinedload(SharedCart.contributors).joinedload(SharedCartContributor.user),
+            )
+            .where(Order.id == order_id)
+        )
+        order = result.scalars().first()
 
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found.")
 
+        # Check if this is a shared order
+        if order.shared_cart:
+            # Shared order details
+            contributors = [
+                ContributorDetail(
+                    user_id=contributor.user.id,
+                    name=contributor.user.name,
+                    delivery_fee_contribution=contributor.delivery_fee_contribution,
+                )
+                for contributor in order.shared_cart.contributors
+            ]
 
+            items = [
+                OrderItemDetail(
+                    item_id=item.item.id,
+                    name=item.item.name,
+                    price=item.item.price,
+                    quantity=item.quantity,
+                    total_cost=item.price * item.quantity,
+                )
+                for item in order.shared_cart.shared_cart_items
+            ]
 
-@router.get("/orders/{order_id}/track", response_model=TrackOrderResponse)
-async def track_order(order_id: int, db: AsyncSession = Depends(get_db)) -> TrackOrderResponse:
-    """
-    Overview:
-    Track the specified order, including ETA and order summary.
+            return OrderDetailResponse(
+                order_id=order.id,
+                shared_cart_id=order.shared_cart.id,
+                total_cost=order.total_amount,
+                status=order.status.value,
+                contributors=contributors,
+                items=items,
+                delivery_fee=order.delivery_fee,
+            )
+        else:
+            # Normal order details
+            items = [
+                OrderItemDetail(
+                    item_id=item.item.id,
+                    name=item.item.name,
+                    price=item.item.price,
+                    quantity=item.quantity,
+                    total_cost=item.price * item.quantity,
+                )
+                for item in order.order_items
+            ]
 
-    Function Logic:
-    1. Accepts order_id as input.
-    2. Retrieves the order details including ETA, basket value, delivery fee, and cart items from the database.
-    3. Returns the order summary and ETA.
+            return OrderDetailResponse(
+                order_id=order.id,
+                total_cost=order.total_amount,
+                status=order.status.value,
+                contributors=[],  # No contributors for normal orders
+                items=items,
+                delivery_fee=order.delivery_fee,
+            )
 
-    Parameters:
-    - order_id (int): The ID of the order to track.
-    - db (AsyncSession): The database session dependency for querying data.
-
-    Returns:
-    - A JSON response conforming to the TrackOrderResponse model.
-    """
-    # Mock response for frontend testing
-    eta = "20 minutes"  # Placeholder ETA value
-    basket_value = 50.0  # Placeholder value for basket
-    delivery_fee = 5.0   # Placeholder value for delivery fee
-    total_amount = basket_value + delivery_fee
-    items = [
-        CartItem(item_id=1, name="Apple", quantity=3, price=1.5),
-        CartItem(item_id=2, name="Banana", quantity=2, price=1.0)
-    ]
-    return TrackOrderResponse(
-        order_id=order_id,
-        eta=eta,
-        basket_value=basket_value,
-        delivery_fee=delivery_fee,
-        total_amount=total_amount,
-        items=items,
-        message="Order is on the way"
-    )
-
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch order details: {e}")
 
 
 @router.get("/orders/slots", response_model=OrderSlotsResponse)
-async def display_order_slots() -> OrderSlotsResponse:
+async def display_order_slots(
+    supermarket_id: int = Query(..., description="The ID of the supermarket"),
+    db: AsyncSession = Depends(get_db)
+) -> OrderSlotsResponse:
     """
-    Overview:
-    Display available order slots for scheduling delivery.
+    Display available order slots for a specific supermarket.
 
     Function Logic:
-    1. Returns a list of available delivery slots.
+    1. Accepts supermarket_id as input.
+    2. Retrieves the list of available delivery slots for the specified supermarket.
+    3. Returns the list of delivery slots.
+
+    Parameters:
+    - supermarket_id (int): The ID of the supermarket for which slots are being fetched.
+    - db (AsyncSession): The database session dependency for querying data.
 
     Returns:
     - A JSON response conforming to the OrderSlotsResponse model.
     """
-    # Mock response for frontend testing
-    available_slots = ["6am", "9am", "12pm", "3pm", "6pm", "9pm", "now"]
-    return OrderSlotsResponse(available_slots=available_slots)
+    try:
+        # Fetch order slots for the specified supermarket
+        result = await db.execute(
+            select(OrderSlot).where(OrderSlot.supermarket_id == supermarket_id)
+        )
+        slots = result.scalars().all()
 
+        if not slots:
+            raise HTTPException(status_code=404, detail="No order slots found for the specified supermarket.")
+
+        # Extract delivery times
+        available_slots = [slot.delivery_time for slot in slots]
+        return OrderSlotsResponse(available_slots=available_slots)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch order slots: {e}")
 
 
 @router.get("/user/addresses", response_model=AddressesResponse)
 async def display_addresses(user_id: int, db: AsyncSession = Depends(get_db)) -> AddressesResponse:
     """
     Overview:
-    Display the list of saved addresses for the user.
+    Display the list of all saved addresses.
 
     Function Logic:
-    1. Accepts user_id as input.
-    2. Retrieves the list of saved addresses for the specified user from the database.
-    3. Returns the list of addresses.
+    1. Retrieves all saved addresses from the database.
+    2. Returns the list of addresses.
 
     Parameters:
-    - user_id (int): The ID of the user whose addresses are being displayed.
     - db (AsyncSession): The database session dependency for querying data.
 
     Returns:
     - A JSON response conforming to the AddressesResponse model.
     """
-    # Mock response for frontend testing
-    addresses = [
-        Address(address_id=1, address_details="123 Main St, Springfield"),
-        Address(address_id=2, address_details="456 Elm St, Shelbyville")
-    ]
-    return AddressesResponse(addresses=addresses)
+    try:
+        result = await db.execute(select(Address))
+        addresses = result.scalars().all()
+
+        if not addresses:
+            return AddressesResponse(addresses=[])
+
+        address_responses = [
+            AddressResponse(address_id=address.id, address_details=address.building_name)
+            for address in addresses
+        ]
+        return AddressesResponse(addresses=address_responses)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch addresses: {e}")
+
+
+@router.get("/orders", response_model=List[OrderDetail])
+async def view_my_orders(
+    user_id: int = Query(..., description="The ID of the user"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Fetch all orders placed by the specified user with a detailed item breakdown.
+    """
+    try:
+        # Query orders for the user
+        result = await db.execute(
+            select(Order)
+            .options(
+                joinedload(Order.order_items).joinedload(OrderItem.item),  # Load order items and related items
+                joinedload(Order.address),
+                joinedload(Order.supermarket),
+            )
+            .where(Order.user_id == user_id)
+        )
+        orders = result.unique().scalars().all()  # Use .unique() to handle joined eager loads
+
+        if not orders:
+            return []
+
+        # Structure the response
+        order_details = []
+        for order in orders:
+            items = [
+                OrderItemDetail(
+                    item_id=item.item.id,
+                    name=item.item.name,
+                    price=item.item.price,
+                    quantity=item.quantity,
+                    total_cost=item.price * item.quantity,
+                )
+                for item in order.order_items
+            ]
+            order_detail = OrderDetail(
+                order_id=order.id,
+                total_cost=order.total_amount,
+                status=order.status.value,
+                address=order.address.building_name,
+                supermarket=order.supermarket.name,
+                items=items,
+            )
+            order_details.append(order_detail)
+
+        return order_details
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch orders: {e}")
+
+
+@router.get("/shared-orders", response_model=List[SharedOrderDetail])
+async def view_shared_orders(
+    user_id: int = Query(..., description="The ID of the user"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Fetch all shared orders where the user is a contributor with detailed breakdown.
+    """
+    try:
+        # Fetch shared cart IDs where the user is a contributor
+        contributor_result = await db.execute(
+            select(SharedCartContributor.shared_cart_id)
+            .where(SharedCartContributor.user_id == user_id)
+        )
+        shared_cart_ids = [row[0] for row in contributor_result.fetchall()]
+
+        if not shared_cart_ids:
+            return []
+
+        # Fetch shared carts
+        shared_carts_result = await db.execute(
+            select(SharedCart)
+            .options(
+                joinedload(SharedCart.orders).joinedload(Order.order_items).joinedload(OrderItem.item),
+                joinedload(SharedCart.contributors).joinedload(SharedCartContributor.user),
+                joinedload(SharedCart.shared_cart_items).joinedload(SharedCartItem.item),
+                joinedload(SharedCart.supermarket),
+            )
+            .where(SharedCart.id.in_(shared_cart_ids))
+            .order_by(SharedCart.created_at.desc())
+        )
+        shared_carts = shared_carts_result.unique().scalars().all()
+
+        shared_order_details = []
+
+        for shared_cart in shared_carts:
+            # Fetch contributors
+            contributors = [
+                ContributorDetail(
+                    user_id=contributor.user.id,
+                    name=contributor.user.name,
+                    delivery_fee_contribution=contributor.delivery_fee_contribution,
+                )
+                for contributor in shared_cart.contributors
+            ]
+
+            # Fetch items
+            for order in shared_cart.orders:
+                items = [
+                    OrderItemDetail(
+                        item_id=item.item.id,
+                        name=item.item.name,
+                        price=item.item.price,
+                        quantity=item.quantity,
+                        total_cost=item.price * item.quantity,
+                    )
+                    for item in order.order_items
+                ]
+
+                shared_order_detail = SharedOrderDetail(
+                    order_id=order.id,
+                    shared_cart_id=shared_cart.id,
+                    total_cost=order.total_amount,
+                    status=order.status.value,
+                    contributors=contributors,
+                    items=items,
+                    delivery_fee=shared_cart.supermarket.delivery_fee,
+                )
+                shared_order_details.append(shared_order_detail)
+
+        return shared_order_details
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch shared orders: {e}")

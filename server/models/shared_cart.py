@@ -20,7 +20,8 @@ class SharedCart(Base):
     order_slot_id = Column(Integer, ForeignKey("order_slots.id"), nullable=False)
     status = Column(Enum(SharedCartStatus), default=SharedCartStatus.OPEN)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    expires_at = Column(DateTime, nullable=False)
 
+    shared_cart_items = relationship("SharedCartItem", back_populates="shared_cart")
     contributors = relationship("SharedCartContributor", back_populates="shared_cart")
-    orders = relationship("Order", back_populates="shared_cart") 
+    orders = relationship("Order", back_populates="shared_cart")
+    supermarket = relationship("Supermarket", back_populates="shared_carts") 
