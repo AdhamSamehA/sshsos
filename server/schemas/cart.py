@@ -49,3 +49,16 @@ class UpdateCartItem(BaseModel):
 
 class UpdateCartRequest(BaseModel):
     items: List[UpdateCartItem]
+
+
+class SubmitDeliveryDetailsRequest(BaseModel):
+   user_id : int
+   supermarket_id : int
+   address_id: int
+   order_time: str  # Can be one of '6am', '9am', '12pm', '3pm', '6pm', '9pm', or 'now'
+
+
+class SubmitDeliveryDetailsResponse(BaseModel):
+   cart_id: int
+   delivery_time: str
+   message: str
