@@ -1,10 +1,12 @@
 import os
 import asyncpg
+from datetime import datetime
 import asyncio
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
+from server.models.wallet_transaction import TransactionType
 from server.models import Base
 import pandas as pd
 import os
@@ -17,7 +19,8 @@ from .models import (
     User,
     Wallet,
     StockLevel,
-    SupermarketCategory
+    SupermarketCategory,
+    WalletTransaction
 ) 
 
 # Load environment variables
@@ -62,7 +65,8 @@ MODEL_MAPPING = {
     "supermarkets.csv": Supermarket,
     "users.csv": User,
     "wallet.csv": Wallet,
-    "supermarket_categories.csv" : SupermarketCategory
+    "supermarket_categories.csv" : SupermarketCategory,
+    "wallet_transactions.csv" : WalletTransaction
 }
 
 async def populate_addresses(session: AsyncSession, file_path: str):
@@ -153,7 +157,7 @@ async def populate_wallets(session: AsyncSession, file_path: str):
     df = pd.read_csv(file_path)
 
     for _, row in df.iterrows():
-        wallet = Wallet(user_id=row["user_id"], balance=row["balance"])
+        wallet = Wallet(user_id=row["user_id"])
         session.add(wallet)
     await session.commit()
     print("Wallets populated successfully.")
@@ -212,7 +216,38 @@ async def populate_supermarket_categories(session: AsyncSession, file_path: str)
         print("The following rows were skipped due to invalid data:")
         print(pd.DataFrame(invalid_rows))
 
+async def populate_wallet_transactions(session: AsyncSession, file_path: str):
+    df = pd.read_csv(file_path)
 
+    for _, row in df.iterrows():
+        # Validate transaction_type to ensure correct values
+        if row["transaction_type"] not in ["credit", "debit"]:
+            print(f"Invalid transaction type in row: {row}")
+            continue
+
+        created_at = datetime.strptime(row["created_at"], "%Y-%m-%d %H:%M:%S")
+
+
+        # Map transaction_type string to TransactionType enum
+        try:
+            transaction_type = TransactionType[row["transaction_type"].upper()]
+        except KeyError:
+            print(f"Invalid transaction type in row: {row}")
+            continue
+
+        # Create WalletTransaction object
+        transaction = WalletTransaction(
+            user_id=row["user_id"],
+            wallet_id=row["wallet_id"],
+            amount=row["amount"],
+            transaction_type=transaction_type, 
+            created_at=created_at
+        )
+        session.add(transaction)
+
+    # Commit the transactions
+    await session.commit()
+    print("Wallet Transactions populated successfully.")
 
 async def populate_database():
     async with SessionLocal() as session:
@@ -227,6 +262,7 @@ async def populate_database():
             "order_slots.csv": populate_order_slots,
             "users.csv": populate_users,
             "wallet.csv": populate_wallets,
+            "wallet_transactions.csv": populate_wallet_transactions, 
             "stock_levels.csv": populate_stock_levels,
             "supermarket_categories.csv": populate_supermarket_categories,
         }

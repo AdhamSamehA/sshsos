@@ -25,3 +25,4 @@ class Item(Base):
     category = relationship("Category", back_populates="items")
     supermarket = relationship("Supermarket", back_populates="items")
     stock_levels = relationship("StockLevel", back_populates="item")
+    shared_cart_items = relationship("SharedCartItem", back_populates="item")

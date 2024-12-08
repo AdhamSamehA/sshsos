@@ -19,3 +19,5 @@ class User(Base):
     user_orders = relationship("UserOrder", back_populates="user")
     default_address = relationship("Address")
     cart = relationship("Cart", back_populates="user")
+    transactions = relationship("WalletTransaction", back_populates="user", cascade="all, delete-orphan")
+    wallet = relationship("Wallet", back_populates="user")
