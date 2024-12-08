@@ -20,5 +20,5 @@ class User(Base):
     default_address = relationship("Address")
     cart = relationship("Cart", back_populates="user")
     transactions = relationship("WalletTransaction", back_populates="user", cascade="all, delete-orphan")
-    wallet = relationship("Wallet", back_populates="user")
+    wallet = relationship("Wallet", back_populates="user", uselist=False)
     shared_cart_contributors = relationship("SharedCartContributor", back_populates="user")
