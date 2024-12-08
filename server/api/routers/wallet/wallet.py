@@ -1,88 +1,125 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload, joinedload
+from datetime import datetime
+
 from server.schemas import WalletTopUpRequest, WalletPaymentRequest, WalletResponse
 from server.dependencies import get_db
-from server.models.wallet import Wallet
+from server.models import Wallet, WalletTransaction, User
+from server.models.wallet_transaction import TransactionType
+
 
 router = APIRouter()
 
 @router.post("/wallet/top-up", response_model=WalletResponse)
 async def top_up_wallet(request: WalletTopUpRequest, db: AsyncSession = Depends(get_db)) -> WalletResponse:
     """
-    Overview:
     Top up the user's wallet with the specified amount.
-
-    Function Logic:
-    1. Accepts the amount to be added as input.
-    2. Fetches the wallet from the database.
-    3. Updates the wallet balance with the new amount.
-    4. Returns the updated wallet balance and a success message.
-
-    Parameters:
-    - request (WalletTopUpRequest): Contains the amount to add to the wallet.
-    - db (AsyncSession): The database session dependency for querying and updating data.
-
-    Returns:
-    - A JSON response conforming to the WalletResponse model.
     """
-    # Mock response for frontend testing
+    if request.amount <= 0:
+        raise HTTPException(status_code=400, detail="Top-up amount must be greater than zero.")
+
+    # Fetch the user with the wallet eagerly loaded
+    stmt = select(User).options(selectinload(User.wallet)).where(User.id == request.user_id)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+
+    if not user or not user.wallet:
+        raise HTTPException(status_code=404, detail="User or wallet not found.")
+
+    wallet = user.wallet
+
+    # Add a credit transaction
+    transaction = WalletTransaction(
+        wallet_id=wallet.id,
+        user_id=request.user_id,
+        amount=request.amount,
+        transaction_type=TransactionType.CREDIT,
+        created_at=datetime.utcnow(),
+    )
+    db.add(transaction)
+    await db.commit()
+
+    # Calculate updated balance
+    balance_stmt = select(func.sum(WalletTransaction.amount)).where(WalletTransaction.wallet_id == wallet.id)
+    balance_result = await db.execute(balance_stmt)
+    balance = balance_result.scalar() or 0.0
+
     return WalletResponse(
-        wallet_id=1,
-        balance=150.0,
+        wallet_id=wallet.id,
+        balance=balance,
         message="Wallet topped up successfully."
     )
-
 
 @router.post("/wallet/pay", response_model=WalletResponse)
 async def pay_from_wallet(request: WalletPaymentRequest, db: AsyncSession = Depends(get_db)) -> WalletResponse:
     """
-    Overview:
     Deduct a specified amount from the user's wallet balance.
-
-    Function Logic:
-    1. Accepts the amount to deduct as input.
-    2. Fetches the wallet from the database.
-    3. Checks if the wallet has sufficient balance.
-    4. Deducts the amount from the wallet.
-    5. Returns the updated wallet balance and a success message.
-
-    Parameters:
-    - request (WalletPaymentRequest): Contains the amount to deduct from the wallet.
-    - db (AsyncSession): The database session dependency for querying and updating data.
-
-    Returns:
-    - A JSON response conforming to the WalletResponse model.
     """
-    # Mock response for frontend testing
+    if request.amount <= 0:
+        raise HTTPException(status_code=400, detail="Payment amount must be greater than zero.")
+
+    # Fetch the user with the wallet eagerly loaded
+    stmt = select(User).options(selectinload(User.wallet)).where(User.id == request.user_id)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+
+    if not user or not user.wallet:
+        raise HTTPException(status_code=404, detail="User or wallet not found.")
+
+    wallet = user.wallet
+
+    # Calculate current balance
+    balance_stmt = select(func.sum(WalletTransaction.amount)).where(WalletTransaction.wallet_id == wallet.id)
+    balance_result = await db.execute(balance_stmt)
+    balance = balance_result.scalar() or 0.0
+
+    if balance < request.amount:
+        raise HTTPException(status_code=400, detail="Insufficient wallet balance.")
+
+    # Add a debit transaction
+    transaction = WalletTransaction(
+        wallet_id=wallet.id,
+        user_id=request.user_id,
+        amount=-request.amount,
+        transaction_type=TransactionType.DEBIT,
+        created_at=datetime.utcnow(),
+    )
+    db.add(transaction)
+    await db.commit()
+
+    # Recalculate balance
+    balance -= request.amount
+
     return WalletResponse(
-        wallet_id=1,
-        balance=120.0,
+        wallet_id=wallet.id,
+        balance=balance,
         message="Payment successful."
     )
 
-
 @router.get("/wallet/balance", response_model=WalletResponse)
-async def check_wallet_balance(wallet_id: int, db: AsyncSession = Depends(get_db)) -> WalletResponse:
+async def check_wallet_balance(user_id: int, db: AsyncSession = Depends(get_db)) -> WalletResponse:
     """
-    Overview:
     Retrieve the current balance of the user's wallet.
-
-    Function Logic:
-    1. Accepts wallet ID as input.
-    2. Fetches the wallet balance from the database.
-    3. Returns the wallet balance and a success message.
-
-    Parameters:
-    - wallet_id (int): The ID of the wallet to retrieve.
-    - db (AsyncSession): The database session dependency for querying data.
-
-    Returns:
-    - A JSON response conforming to the WalletResponse model.
     """
-    # Mock response for frontend testing
+    # Fetch the user with the wallet eagerly loaded
+    stmt = select(User).options(selectinload(User.wallet)).where(User.id == user_id)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+
+    if not user or not user.wallet:
+        raise HTTPException(status_code=404, detail="User or wallet not found.")
+
+    wallet = user.wallet
+
+    # Calculate balance
+    balance_stmt = select(func.sum(WalletTransaction.amount)).where(WalletTransaction.wallet_id == wallet.id)
+    balance_result = await db.execute(balance_stmt)
+    balance = balance_result.scalar() or 0.0
+
     return WalletResponse(
-        wallet_id=wallet_id,
-        balance=100.0,
+        wallet_id=wallet.id,
+        balance=balance,
         message="Wallet balance retrieved successfully."
     )
-
