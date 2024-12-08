@@ -28,8 +28,14 @@ class Order(Base):
     delivery_fee = Column(Float, nullable=False)
     status = Column(Enum(OrderStatus), default=OrderStatus.PENDING)
     supermarket_id = Column(Integer, ForeignKey('supermarkets.id'))
+    cart_id = Column(Integer, ForeignKey('carts.id'))
+    shared_cart_id = Column(Integer, ForeignKey("shared_carts.id"), nullable=True)  # Nullable for individual orders
+    order_slot_id = Column(Integer, ForeignKey("order_slots.id"), nullable=True)
 
     user = relationship("User", back_populates="orders")
     address = relationship("Address")
     order_items = relationship("OrderItem", back_populates="order")
     supermarket = relationship("Supermarket")
+    cart = relationship("Cart", back_populates="orders")
+    shared_cart = relationship("SharedCart", back_populates="orders")  # New relationship with shared carts
+    order_slot = relationship("OrderSlot", back_populates="orders") 

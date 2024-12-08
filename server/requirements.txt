@@ -2,8 +2,10 @@ asyncpg
 sqlalchemy[asyncio]
 python-dotenv
 sqlalchemy-utils
+asyncio
 fastapi
 uvicorn
 python-multipart
 python-jose[cryptography]
 passlib[bcrypt]
+pandas

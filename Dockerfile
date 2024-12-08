@@ -25,3 +25,6 @@ EXPOSE 5200
 
 # Command to start the FastAPI app with Uvicorn
 CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "5200", "--reload"]
+
+# Keep the container running indefinitely
+#CMD ["tail", "-f", "/dev/null"]
