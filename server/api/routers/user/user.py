@@ -4,7 +4,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from server.schemas import AccountDetailsResponse, OrderHistoryResponse, OrderSummary
-from server.models import User, WalletTransaction, Order, Address
+from server.models import User, WalletTransaction, Order, Address, SharedCartContributor
 from server.dependencies import get_db
 
 router = APIRouter()
@@ -53,10 +53,24 @@ async def get_account_details(user_id: int, db: AsyncSession = Depends(get_db)) 
             if address:
                 default_address = address
 
-        # Count the number of past orders
-        stmt_orders = select(func.count(Order.id)).where(Order.user_id == user_id)
-        orders_result = await db.execute(stmt_orders)
-        total_orders = orders_result.scalar() or 0
+        # Count the number of normal orders placed by the user (exclude shared orders)
+        stmt_normal_orders = select(func.count(Order.id)).where(
+            Order.user_id == user_id,
+            Order.shared_cart_id.is_(None)  # Exclude shared orders
+        )
+        normal_orders_result = await db.execute(stmt_normal_orders)
+        normal_orders_count = normal_orders_result.scalar() or 0
+
+        # Count the number of shared orders where the user is a contributor
+        stmt_shared_orders = select(func.count(Order.id)).join(
+            SharedCartContributor,
+            SharedCartContributor.shared_cart_id == Order.shared_cart_id
+        ).where(SharedCartContributor.user_id == user_id)
+        shared_orders_result = await db.execute(stmt_shared_orders)
+        shared_orders_count = shared_orders_result.scalar() or 0
+
+        # Calculate total orders
+        total_orders = normal_orders_count + shared_orders_count
 
         # Return response
         return AccountDetailsResponse(

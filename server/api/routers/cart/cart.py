@@ -112,20 +112,29 @@ async def add_item_to_cart(cart_id: int, request: AddItemRequest, db: AsyncSessi
     if stock.quantity < request.quantity:
         raise HTTPException(status_code=400, detail="Insufficient stock available.")
 
+    # Check if the item is already in the cart
+    stmt = select(CartItems).where(CartItems.cart_id == cart_id, CartItems.item_id == request.item_id)
+    result = await db.execute(stmt)
+    existing_cart_item = result.scalar_one_or_none()
+
+    if existing_cart_item:
+        # Update the quantity and price of the existing item
+        existing_cart_item.quantity += request.quantity
+        existing_cart_item.price = item.price
+    else:
+        # Create a new cart item
+        new_cart_item = CartItems(
+            cart_id=cart_id,
+            item_id=request.item_id,
+            quantity=request.quantity,
+            price=item.price
+        )
+        db.add(new_cart_item)
+
     # Reduce stock
     stock.quantity -= request.quantity
-
-    # Add stock back to the session (optional since it's already tracked)
     db.add(stock)
 
-    # Add item to the cart
-    new_cart_item = CartItems(
-        cart_id=cart_id,
-        item_id=request.item_id,
-        quantity=request.quantity,
-        price=item.price
-    )
-    db.add(new_cart_item)
     await db.commit()
     await db.refresh(cart)
 
