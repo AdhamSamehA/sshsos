@@ -6,9 +6,6 @@ WORKDIR /app
 # Copy package.json and package-lock.json first
 COPY package*.json ./
 
-# Install React and React DOM with the latest versions
-RUN npm install react@latest react-dom@latest
-
 # Install remaining dependencies
 RUN npm install
 
