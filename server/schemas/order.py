@@ -11,24 +11,9 @@ display order slots, display adressies
 
 
 from pydantic import BaseModel
+from datetime import datetime
 from typing import Optional
 from typing import List
-
-
-
-class SubmitDeliveryDetailsRequest(BaseModel):
-   address_id: int
-   order_time: str  # Can be one of '6am', '9am', '12pm', '3pm', '6pm', '9pm', or 'now'
-
-
-
-
-class SubmitDeliveryDetailsResponse(BaseModel):
-   order_id: int
-   delivery_time: str
-   message: str
-
-
 
 
 class CartItem(BaseModel):
@@ -53,8 +38,6 @@ class CancelOrderResponse(BaseModel):
 
 
 
-
-
 class TrackOrderResponse(BaseModel):
     order_id: int
     eta: str
@@ -69,10 +52,63 @@ class OrderSlotsResponse(BaseModel):
     available_slots: List[str]
 
 
-class Address(BaseModel):
+class AddressResponse(BaseModel):
     address_id: int
     address_details: str
 
 class AddressesResponse(BaseModel):
-    addresses: List[Address]
+    addresses: List[AddressResponse]
 
+
+# Schemas for My Orders
+class OrderItemDetail(BaseModel):
+    item_id: int
+    name: str
+    price: float
+    quantity: int
+    total_cost: float
+
+    class Config:
+        orm_mode = True
+
+class OrderDetail(BaseModel):
+    order_id: int
+    total_cost: float
+    status: str
+    items: List[OrderItemDetail]
+
+    class Config:
+        orm_mode = True
+
+# Schemas for Shared Orders
+class ContributorDetail(BaseModel):
+    user_id: int
+    name: str  
+    delivery_fee_contribution: float
+
+    class Config:
+        orm_mode = True
+
+class SharedOrderDetail(BaseModel):
+    order_id: int
+    shared_cart_id: int
+    total_cost: float
+    status: str
+    contributors: List[ContributorDetail]
+    items: List[OrderItemDetail]
+    delivery_fee: float
+
+    class Config:
+        orm_mode = True
+
+class OrderDetailResponse(BaseModel):
+    """
+    Response model for detailed order information.
+    """
+    order_id: int
+    shared_cart_id: Optional[int] = None  # Only populated for shared orders
+    total_cost: float
+    status: str
+    contributors: List[ContributorDetail] = []  # Empty for normal orders
+    items: List[OrderItemDetail]
+    delivery_fee: float

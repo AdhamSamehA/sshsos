@@ -10,8 +10,8 @@ class SharedCartContributor(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     shared_cart_id = Column(Integer, ForeignKey("shared_carts.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    wallet_transaction_id = Column(Integer, ForeignKey("wallet_transactions.id"), nullable=False)
-    delivery_fee_contribution = Column(Float, nullable=False)  # Max delivery fee paid upfront
+    delivery_fee_contribution = Column(Float, nullable=True)
 
     shared_cart = relationship("SharedCart", back_populates="contributors")
     items = relationship("SharedCartItem", back_populates="contributor")
+    user = relationship("User", back_populates="shared_cart_contributors")
