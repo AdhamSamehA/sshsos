@@ -4,6 +4,8 @@ import Supermarkets from './components/supermarkets';
 import SupermarketShopping from './components/SupermarketShopping';
 import Items from './components/Items';
 import CartPage from './components/CartPage';  // Import CartPage
+import './App.css';
+
 
 function App() {
   return (
