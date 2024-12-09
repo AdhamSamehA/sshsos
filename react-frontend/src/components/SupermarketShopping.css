@@ -1,47 +1,44 @@
-/* supermarkets.css */
-
 /* Container to hold all category buttons */
 .categories-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-    padding: 20px;
-  }
-  
-  /* Style for each category button */
-  .category-button {
-    background-color: #f8f8f8;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px;
-    width: 150px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Hover effect for buttons */
-  .category-button:hover {
-    background-color: #f0f0f0;
-    box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.15);
-  }
-  
-  /* Style for category image inside button */
-  .category-image img {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 4px;
-    margin-bottom: 10px;
-  }
-  
-  /* Style for category name text */
-  .category-button p {
-    font-size: 14px;
-    color: #333;
-    font-weight: bold;
-    margin: 0;
-  }
-  
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  padding: 30px; /* Increased padding */
+}
+
+/* Style for each category button */
+.category-button {
+  background-color: #4CAF50; /* New background color */
+  border: 1px solid #388E3C; /* Darker green border */
+  border-radius: 12px; /* Slightly rounder edges */
+  padding: 15px; /* Increased padding */
+  width: 180px; /* Increased width */
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2); /* Larger shadow */
+}
+
+/* Hover effect for buttons */
+.category-button:hover {
+  background-color: #45a049; /* Slightly darker green on hover */
+  box-shadow: 0px 4px 25px rgba(0, 0, 0, 0.3); /* Stronger shadow on hover */
+}
+
+/* Style for category image inside button */
+.category-image img {
+  width: 100%;
+  height: 120px; /* Increased height */
+  object-fit: cover;
+  border-radius: 8px; /* More rounded corners for image */
+  margin-bottom: 12px; /* Increased space below the image */
+}
+
+/* Style for category name text */
+.category-button p {
+  font-size: 16px; /* Increased font size */
+  color: #ffffff; /* White text for better contrast */
+  font-weight: bold;
+  margin: 0;
+}

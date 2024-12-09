@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Items.css'; // CSS for styling
 
@@ -8,6 +8,9 @@ const Items = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [addedToCart, setAddedToCart] = useState(false); // To show the popup
+  const [cartItems, setCartItems] = useState([]); // To track items in the cart
+  const navigate = useNavigate();
 
   // Fetch items based on supermarketId and categoryId
   useEffect(() => {
@@ -27,6 +30,32 @@ const Items = () => {
     fetchItems();
   }, [supermarketId, categoryId]);
 
+  // Add item to cart simulation
+  const addToCart = async (item) => {
+    try {
+      // Here we simulate adding the item to the cart.
+      // Normally, you would call an API to add the item to the backend cart.
+
+      // Add the item to the cart array (mocking the backend operation)
+      setCartItems([...cartItems, { ...item, quantity: 1 }]);
+
+      // Show the popup confirmation
+      setAddedToCart(true);
+
+      // Set a timeout to hide the popup after 2 seconds
+      setTimeout(() => {
+        setAddedToCart(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Error adding item to cart:', err);
+    }
+  };
+
+  // Navigate to the Cart page
+  const viewCart = () => {
+    navigate('/cart');
+  };
+
   return (
     <div>
       <h2>Items</h2>
@@ -44,20 +73,32 @@ const Items = () => {
                   alt={item.name}
                   className="item-image"
                   onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/150"; // Fallback image
+                    e.target.src = "https://via.placeholder.com/150"; // Fallback if image doesn't load
                   }}
                 />
-                <h3>{item.name}</h3>
-                <p>{item.description}</p>
-                <p className="item-price">${item.price.toFixed(2)}</p>
-                <button className="add-to-cart-btn">Add to Cart</button>
+                <div className="item-details">
+                  <h3>{item.name}</h3>
+                  <p>{item.description}</p>
+                  <p>Price: ${item.price}</p>
+                  <button onClick={() => addToCart(item)}>Add to Cart</button>
+                </div>
               </div>
             ))
           ) : (
-            <p>No items available for this category.</p>
+            <p>No items available</p>
           )}
         </div>
       )}
+
+      {/* Confirmation Popup */}
+      {addedToCart && (
+        <div className="popup">
+          <p>Item added to cart!</p>
+        </div>
+      )}
+
+      {/* View Cart Button */}
+      <button className="view-cart-btn" onClick={viewCart}>View Cart</button>
     </div>
   );
 };

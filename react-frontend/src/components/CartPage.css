@@ -1,0 +1,115 @@
+/* Styles for the cart page */
+.cart-page {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .cart-items {
+    margin-bottom: 20px;
+  }
+  
+  .cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .cart-item .item-name {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .cart-item .item-price {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .cart-item .quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .cart-item .quantity-controls button {
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Color changes for buttons */
+  .cart-item .quantity-controls button.plus {
+    background-color: #4CAF50; /* Green */
+    color: white;
+  }
+  
+  .cart-item .quantity-controls button.plus:hover {
+    background-color: #45a049; /* Darker green */
+  }
+  
+  .cart-item .quantity-controls button.minus {
+    background-color: #f44336; /* Red */
+    color: white;
+  }
+  
+  .cart-item .quantity-controls button.minus:hover {
+    background-color: #e53935; /* Darker red */
+  }
+  
+  .cart-item .remove-item {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .cart-item .remove-item:hover {
+    background-color: #e53935; /* Darker red */
+  }
+  
+  .total-price {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+  
+  .cart-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  .cart-buttons button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+  }
+  
+  .cart-buttons .empty-cart {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .cart-buttons .empty-cart:hover {
+    background-color: #e53935;
+  }
+  
+  .cart-buttons .checkout {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .cart-buttons .checkout:hover {
+    background-color: #45a049;
+  }
+  
