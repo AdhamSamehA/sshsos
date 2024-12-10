@@ -1,29 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./Items.css"; // CSS for styling
+import "./Items.css";
 
 const Items = () => {
-  const { supermarketId, categoryId } = useParams(); // Get IDs from the URL
-  const [items, setItems] = useState([]); // List of items in the current category
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
-  const [cartId, setCartId] = useState(localStorage.getItem("cartId") || null); // Persistent cart ID
-  const [cartItems, setCartItems] = useState(JSON.parse(localStorage.getItem("cartItems")) || []); // Persistent cart items
-  const [addedToCart, setAddedToCart] = useState(false); // To show the popup
-  const [addedItem, setAddedItem] = useState(null); // Tracks the item added to the cart
+  const { supermarketId, categoryId } = useParams();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [cartId, setCartId] = useState(localStorage.getItem("cartId") || null);
+  const [cartTotal, setCartTotal] = useState(0);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [addedItem, setAddedItem] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch items based on supermarketId and categoryId
+  // Fetch items for the current supermarket and category
   useEffect(() => {
     const fetchItems = async () => {
       try {
         const response = await axios.get(
           `http://localhost:5200/items?supermarket_id=${supermarketId}&category_id=${categoryId}`
         );
-        setItems(response.data.items); // Set items from the backend
+        setItems(response.data.items || []);
       } catch (err) {
-        setError("Error fetching items");
+        setError("Error fetching items.");
         console.error(err);
       }
       setLoading(false);
@@ -32,16 +32,32 @@ const Items = () => {
     fetchItems();
   }, [supermarketId, categoryId]);
 
-  // Create a cart if it doesn't already exist
+  // Fetch cart total if a cart exists
+  useEffect(() => {
+    const fetchCartTotal = async () => {
+      if (!cartId) return;
+
+      try {
+        const response = await axios.get(`http://localhost:5200/carts/${cartId}`);
+        setCartTotal(response.data.total_price || 0);
+      } catch (err) {
+        console.error("Error fetching cart total:", err);
+      }
+    };
+
+    fetchCartTotal();
+  }, [cartId]);
+
+  // Create a cart if it doesn't exist
   const createCart = async () => {
     if (!cartId) {
       try {
         const response = await axios.post(`http://localhost:5200/carts/create`, {
-          user_id: 1, // Replace with the actual user ID
+          user_id: 1,
           supermarket_id: supermarketId,
         });
         const newCartId = response.data.cart_id;
-        setCartId(newCartId); // Store the created cart ID
+        setCartId(newCartId);
         localStorage.setItem("cartId", newCartId); // Persist cart ID
       } catch (err) {
         console.error("Error creating cart:", err);
@@ -49,41 +65,22 @@ const Items = () => {
     }
   };
 
-  // Add item to the cart
+  // Add item to cart
   const addToCart = async (item) => {
     try {
-      // Create the cart if it doesn't exist
       await createCart();
 
-      // Add the item to the cart in the backend
       await axios.post(`http://localhost:5200/carts/${cartId}/add-item`, {
         item_id: item.id,
-        quantity: 1, // Default quantity to add
+        quantity: 1,
       });
 
-      // Update the cart items locally
-      const existingItem = cartItems.find((cartItem) => cartItem.id === item.id);
-      if (existingItem) {
-        // Update the quantity of the existing item
-        const updatedCartItems = cartItems.map((cartItem) =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        );
-        setCartItems(updatedCartItems);
-        localStorage.setItem("cartItems", JSON.stringify(updatedCartItems));
-      } else {
-        // Add a new item to the cart
-        const updatedCartItems = [...cartItems, { ...item, quantity: 1 }];
-        setCartItems(updatedCartItems);
-        localStorage.setItem("cartItems", JSON.stringify(updatedCartItems));
-      }
+      const response = await axios.get(`http://localhost:5200/carts/${cartId}`);
+      setCartTotal(response.data.total_price || 0);
 
-      // Show the popup with the item added
       setAddedToCart(true);
       setAddedItem(item);
 
-      // Hide the popup after 2 seconds
       setTimeout(() => {
         setAddedToCart(false);
         setAddedItem(null);
@@ -93,9 +90,8 @@ const Items = () => {
     }
   };
 
-  // Navigate to the Cart page
   const viewCart = () => {
-    navigate("/cart"); // Navigate to the cart page
+    navigate("/cart");
   };
 
   return (
@@ -107,32 +103,27 @@ const Items = () => {
         <p>{error}</p>
       ) : (
         <div className="items-container">
-          {items.length > 0 ? (
-            items.map((item) => (
-              <div key={item.id} className="item-card">
-                <img
-                  src={item.photo_url} // Backend-provided image
-                  alt={item.name}
-                  className="item-image"
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/150"; // Fallback if image doesn't load
-                  }}
-                />
-                <div className="item-details">
-                  <h3>{item.name}</h3>
-                  <p>{item.description}</p>
-                  <p>Price: ${item.price.toFixed(2)}</p>
-                  <button onClick={() => addToCart(item)}>Add to Cart</button>
-                </div>
+          {items.map((item) => (
+            <div key={item.id} className="item-card">
+              <img
+                src={item.photo_url}
+                alt={item.name}
+                className="item-image"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/150";
+                }}
+              />
+              <div className="item-details">
+                <h3>{item.name}</h3>
+                <p>{item.description}</p>
+                <p>Price: ${item.price.toFixed(2)}</p>
+                <button onClick={() => addToCart(item)}>Add to Cart</button>
               </div>
-            ))
-          ) : (
-            <p>No items available</p>
-          )}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Confirmation Popup */}
       {addedToCart && (
         <div className="popup">
           <p>{addedItem?.name} added to cart!</p>
@@ -140,10 +131,9 @@ const Items = () => {
         </div>
       )}
 
-      {/* View Cart Button (only if cart is created) */}
       {cartId && (
         <button className="view-cart-btn" onClick={viewCart}>
-          View Cart
+          View Cart (Total: ${cartTotal.toFixed(2)})
         </button>
       )}
     </div>

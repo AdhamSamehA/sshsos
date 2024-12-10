@@ -7,7 +7,6 @@ const CartPage = () => {
   const [cartItems, setCartItems] = useState([]); // Cart items
   const [loading, setLoading] = useState(true); // Loading state
   const [totalPrice, setTotalPrice] = useState(0); // Total price
-  const [walletBalance, setWalletBalance] = useState(0); // Wallet balance
   const [error, setError] = useState(null); // Error state
   const navigate = useNavigate();
 
@@ -15,69 +14,80 @@ const CartPage = () => {
 
   // Fetch cart data from the backend
   useEffect(() => {
-    const fetchCartItems = async () => {
-      if (!cartId) {
-        console.error("Cart ID not found in localStorage.");
-        setError("Cart not found.");
-        setLoading(false);
-        return;
-      }
-
+    const fetchCartData = async () => {
       try {
-        console.log(`Fetching cart data for cartId: ${cartId}`);
-        const response = await axios.get(`http://localhost:5200/carts/${cartId}`);
-        if (response.data) {
-          console.log("Cart data fetched successfully:", response.data);
-          setCartItems(response.data.items || []); // Update items
-          setTotalPrice(response.data.total_price || 0); // Update total price
-          setWalletBalance(response.data.wallet_balance || 0); // Update wallet balance
-        } else {
-          console.error("Invalid cart data:", response);
-          setError("Invalid cart data received from the server.");
+        if (!cartId) {
+          setError("Cart not found.");
+          setLoading(false);
+          return;
         }
+
+        const response = await axios.get(`http://localhost:5200/carts/${cartId}`);
+        setCartItems(response.data.items || []);
+        setTotalPrice(response.data.total_price || 0);
       } catch (err) {
-        console.error("Error fetching cart data:", err);
         setError("Error fetching cart data. Please try again.");
-      } finally {
-        setLoading(false);
+        console.error(err);
       }
+      setLoading(false);
     };
 
-    fetchCartItems();
-  }, [cartId]);
+    fetchCartData();
+  }, [cartId]); // Dependency array ensures it runs whenever cartId changes
 
-  // Handle quantity change
-  const updateQuantity = async (itemId, quantity) => {
-    if (quantity < 1) {
-      removeItemFromCart(itemId); // Remove item if quantity drops below 1
-      return;
-    }
-
+  // Add item to cart (for the plus button)
+  const addItemToCart = async (itemId) => {
     try {
-      const response = await axios.post(`http://localhost:5200/carts/${cartId}/add-item`, {
+      await axios.post(`http://localhost:5200/carts/${cartId}/add-item`, {
         item_id: itemId,
-        quantity,
+        quantity: 1,
       });
-      if (response.data) {
-        console.log("Item quantity updated successfully:", response.data);
-        setCartItems(response.data.items || []); // Update items
-        setTotalPrice(response.data.total_price || 0); // Update total price
-      }
+
+      setCartItems((prevItems) =>
+        prevItems.map((item) =>
+          item.item_id === itemId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
+      setTotalPrice((prevTotal) =>
+        prevTotal +
+        cartItems.find((item) => item.item_id === itemId)?.price || 0
+      );
     } catch (err) {
-      console.error("Error updating item quantity:", err);
+      console.error("Error adding item to cart:", err);
     }
   };
 
-  // Handle removing an item from the cart
-  const removeItemFromCart = async (itemId) => {
+  // Remove item or decrement quantity (for the minus button or "Remove" button)
+  const removeItemFromCart = async (itemId, removeCompletely = false) => {
     try {
-      const response = await axios.delete(`http://localhost:5200/carts/${cartId}/remove-item`, {
-        data: { item_id: itemId },
-      });
-      if (response.data) {
-        console.log("Item removed from cart successfully:", response.data);
-        setCartItems(response.data.items || []); // Update items
-        setTotalPrice(response.data.total_price || 0); // Update total price
+      const item = cartItems.find((cartItem) => cartItem.item_id === itemId);
+      if (!item) return;
+
+      if (item.quantity === 1 || removeCompletely) {
+        // If quantity is 1 or the user explicitly wants to remove the item
+        await axios.delete(`http://localhost:5200/carts/${cartId}/remove-item`, {
+          data: { item_id: itemId },
+        });
+        setCartItems((prevItems) =>
+          prevItems.filter((cartItem) => cartItem.item_id !== itemId)
+        );
+        setTotalPrice((prevTotal) => prevTotal - item.price * item.quantity);
+      } else {
+        // Decrease the quantity by 1
+        await axios.post(`http://localhost:5200/carts/${cartId}/add-item`, {
+          item_id: itemId,
+          quantity: -1,
+        });
+        setCartItems((prevItems) =>
+          prevItems.map((cartItem) =>
+            cartItem.item_id === itemId
+              ? { ...cartItem, quantity: cartItem.quantity - 1 }
+              : cartItem
+          )
+        );
+        setTotalPrice((prevTotal) => prevTotal - item.price);
       }
     } catch (err) {
       console.error("Error removing item from cart:", err);
@@ -88,7 +98,6 @@ const CartPage = () => {
   const emptyCart = async () => {
     try {
       await axios.delete(`http://localhost:5200/carts/${cartId}/empty`);
-      console.log("Cart emptied successfully.");
       setCartItems([]); // Empty cart items
       setTotalPrice(0); // Reset total price
     } catch (err) {
@@ -108,7 +117,6 @@ const CartPage = () => {
     <div className="cart-page">
       <h2>Your Shopping Cart</h2>
 
-      {/* Display cart items */}
       {cartItems.length > 0 ? (
         <div className="cart-items">
           {cartItems.map((item) => (
@@ -121,21 +129,21 @@ const CartPage = () => {
               <div className="quantity-controls">
                 <button
                   className="minus"
-                  onClick={() => updateQuantity(item.item_id, item.quantity - 1)}
+                  onClick={() => removeItemFromCart(item.item_id)}
                 >
                   -
                 </button>
                 <span>{item.quantity}</span>
                 <button
                   className="plus"
-                  onClick={() => updateQuantity(item.item_id, item.quantity + 1)}
+                  onClick={() => addItemToCart(item.item_id)}
                 >
                   +
                 </button>
               </div>
               <button
                 className="remove-item"
-                onClick={() => removeItemFromCart(item.item_id)}
+                onClick={() => removeItemFromCart(item.item_id, true)} // Remove completely
               >
                 Remove
               </button>
@@ -146,18 +154,18 @@ const CartPage = () => {
         <p>Your cart is empty.</p>
       )}
 
-      {/* Display total price and wallet balance */}
       <div className="total-price">
         <h3>Total: ${totalPrice.toFixed(2)}</h3>
-        <h4>Wallet Balance: ${walletBalance.toFixed(2)}</h4>
       </div>
 
-      {/* Buttons */}
       <div className="cart-buttons">
         <button className="empty-cart" onClick={emptyCart}>
           Empty Cart
         </button>
-        <button className="checkout" onClick={() => navigate("/checkout")}>
+        <button
+          className="checkout"
+          onClick={() => navigate("/checkout")}
+        >
           Proceed to Checkout
         </button>
       </div>

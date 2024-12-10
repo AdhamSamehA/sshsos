@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import "./supermarkets.css";
 
-// Replace with your API URLs
 const SUPERMARKET_FEED_API = "http://localhost:5200/supermarket/feed";
 const USER_ACCOUNT_API = "http://localhost:5200/user/account?user_id=1";
 
@@ -11,7 +10,7 @@ export default function Supermarkets() {
   const [supermarkets, setSupermarkets] = useState([]);
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
 
   // Fetch user default address
   const fetchUserAddress = async () => {
@@ -35,14 +34,25 @@ export default function Supermarkets() {
     }
   };
 
+  // Handle Supermarket Click: Create cart and navigate to items page
+  const handleSupermarketClick = async (supermarketId) => {
+    try {
+      const response = await axios.post(`http://localhost:5200/carts/create`, {
+        user_id: 1, // Replace with actual user ID
+        supermarket_id: supermarketId,
+      });
+      const newCartId = response.data.cart_id;
+      localStorage.setItem("cartId", newCartId); // Persist cart ID
+      navigate(`/supermarketshopping/${supermarketId}`); // Navigate to items page
+    } catch (error) {
+      console.error("Error creating cart:", error);
+    }
+  };
+
   useEffect(() => {
     fetchUserAddress();
     fetchSupermarkets();
   }, []);
-
-  const handleSupermarketClick = (supermarketId) => {
-    navigate(`/supermarketshopping/${supermarketId}`); // Navigate to SupermarketShopping
-  };
 
   if (loading) {
     return (
@@ -66,7 +76,7 @@ export default function Supermarkets() {
           <div
             key={item.id}
             className="supermarketCard"
-            onClick={() => handleSupermarketClick(item.id)} // Handle click to navigate
+            onClick={() => handleSupermarketClick(item.id)}
           >
             <img
               src={item.photo_url}
