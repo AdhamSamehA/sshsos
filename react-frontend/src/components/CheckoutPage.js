@@ -104,12 +104,14 @@ const CheckoutPage = () => {
         }
       );
 
-      if (response.data && response.data.message === "Order placed successfully. Cart has been marked as inactive.") {
+      if (response.status === 200 && response.data && response.data.cart_id && response.data.delivery_time) {
         navigate("/order-confirmation", {
           state: {
             orderDetails: response.data,
             address: selectedAddress,
-            deliveryTime: selectedSlot === "now" ? "in 15 mins" : `at ${selectedSlot}`,
+            deliveryTime: selectedSlot === "now" 
+              ? "in 15 mins" 
+              : response.data.delivery_time || `at ${selectedSlot}`
           },
         });
       } else {
@@ -117,6 +119,8 @@ const CheckoutPage = () => {
         alert("Failed to place the order. Please try again.");
         setRedirecting(false);
       }
+      
+      
     } catch (error) {
       console.error("Error placing the order:", error);
       alert("Failed to place the order. Please try again.");
