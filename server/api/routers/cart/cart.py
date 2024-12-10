@@ -350,6 +350,4 @@ async def submit_delivery_details(cart_id: int, request: SubmitDeliveryDetailsRe
         # Normal cart logic
         return await handle_order_now(cart_id, request, db)
     else:
-        # Validate order slot and handle shared cart logic
         return await handle_schedule_order(cart_id, request, db)
-

@@ -1,54 +1,103 @@
-.supermarket-container {
-    padding: 20px;
-  }
-  
-  h2 {
-    font-size: 2rem;
-    margin-bottom: 20px;
-  }
-  
-  .supermarket-list {
-    display: flex;
-    flex-direction: column; /* Vertical list of cards */
-    gap: 20px;
-  }
-  
-  .supermarket-card {
-    display: flex; /* Horizontal card */
-    background-color: #f4f4f4;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    transition: transform 0.3s ease-in-out;
-  }
-  
-  .supermarket-card:hover {
-    transform: translateY(-5px); /* Slight hover effect */
-  }
-  
-  .supermarket-image {
-    width: 100px; /* Adjust image size */
-    height: 100px;
-    object-fit: cover;
-    margin-right: 20px;
-    border-radius: 8px;
-  }
-  
-  .supermarket-details {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  
-  .supermarket-details h3 {
-    margin: 0;
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-  }
-  
-  .supermarket-details p {
-    margin: 5px 0;
-    font-size: 1rem;
-  }
-  
+/* Main container for the entire page */
+.mainContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+}
+
+/* Address bar */
+.addressBar {
+  margin-bottom: 20px;
+  text-align: center;
+  background-color: #ff3366;
+  padding: 10px;
+  border-radius: 8px;
+  color: #fff;
+}
+
+.addressText {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.address {
+  font-size: 14px;
+  color: #fff;
+}
+
+/* Supermarket list container */
+.supermarketsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Individual supermarket card */
+.supermarketCard {
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.supermarketCard:hover {
+  transform: translateY(-5px);
+}
+
+/* Supermarket image */
+.supermarketImage {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+/* Supermarket details */
+.supermarketDetails {
+  padding: 10px;
+}
+
+.supermarketName {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.supermarketMeta {
+  font-size: 14px;
+  color: #666;
+  margin: 5px 0;
+}
+
+.supermarketExtras {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.deliveryTime {
+  font-size: 14px;
+  color: #ff3366;
+}
+
+.ratingContainer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rating {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ff3366;
+}
+
+.ratingText {
+  font-size: 14px;
+  color: #666;
+}
