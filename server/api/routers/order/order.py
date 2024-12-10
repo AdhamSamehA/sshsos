@@ -3,8 +3,9 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from server.dependencies import get_db
-from server.schemas import SubmitDeliveryDetailsRequest, SubmitDeliveryDetailsResponse, PaymentSummaryResponse, CancelOrderResponse, TrackOrderResponse, OrderSlotsResponse, AddressesResponse, CartItem, OrderItemDetail, OrderDetail, ContributorDetail, SharedOrderDetail, AddressResponse, OrderDetailResponse
+from server.schemas import SubmitDeliveryDetailsRequest, SubmitDeliveryDetailsResponse, PaymentSummaryResponse, CancelOrderResponse, TrackOrderResponse, OrderSlotsResponse, AddressesResponse, CartItem, OrderItemDetail, OrderDetail, ContributorDetail, SharedOrderDetail, AddressResponse, OrderDetailResponse, ContributorContribution
 from server.models import SharedCartItem, Order, SharedCart, SharedCartContributor, OrderItem, OrderSlot, Address
+from server.utils import aggregate_items
 from typing import List
 router = APIRouter()
 
@@ -103,16 +104,8 @@ async def get_order_details(
                 for contributor in order.shared_cart.contributors
             ]
 
-            items = [
-                OrderItemDetail(
-                    item_id=item.item.id,
-                    name=item.item.name,
-                    price=item.item.price,
-                    quantity=item.quantity,
-                    total_cost=item.price * item.quantity,
-                )
-                for item in order.shared_cart.shared_cart_items
-            ]
+            # Aggregate shared cart items
+            aggregated_items = aggregate_items(order.shared_cart.shared_cart_items)
 
             return OrderDetailResponse(
                 order_id=order.id,
@@ -120,28 +113,20 @@ async def get_order_details(
                 total_cost=order.total_amount,
                 status=order.status.value,
                 contributors=contributors,
-                items=items,
+                items=aggregated_items,
                 delivery_fee=order.delivery_fee,
             )
         else:
             # Normal order details
-            items = [
-                OrderItemDetail(
-                    item_id=item.item.id,
-                    name=item.item.name,
-                    price=item.item.price,
-                    quantity=item.quantity,
-                    total_cost=item.price * item.quantity,
-                )
-                for item in order.order_items
-            ]
+            # Aggregate order items
+            aggregated_items = aggregate_items(order.order_items)
 
             return OrderDetailResponse(
                 order_id=order.id,
                 total_cost=order.total_amount,
                 status=order.status.value,
                 contributors=[],  # No contributors for normal orders
-                items=items,
+                items=aggregated_items,
                 delivery_fee=order.delivery_fee,
             )
 
@@ -341,6 +326,111 @@ async def view_shared_orders(
                     contributors=contributors,
                     items=items,
                     delivery_fee=shared_cart.supermarket.delivery_fee,
+                )
+                shared_order_details.append(shared_order_detail)
+
+        return shared_order_details
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch shared orders: {e}")
+
+
+@router.get("/shared-orders-test", response_model=List[SharedOrderDetail])
+async def view_shared_orders(
+    user_id: int = Query(..., description="The ID of the user"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Fetch all shared orders where the user is a contributor with detailed breakdown.
+    Includes information on who ordered what, their contribution to the total order, and the items they contributed.
+    """
+    try:
+        # Step 1: Fetch shared cart IDs where the user is a contributor
+        contributor_result = await db.execute(
+            select(SharedCartContributor.shared_cart_id)
+            .where(SharedCartContributor.user_id == user_id)
+        )
+        shared_cart_ids = [row[0] for row in contributor_result.fetchall()]
+
+        if not shared_cart_ids:
+            return []
+
+        # Step 2: Fetch shared carts with related data
+        shared_carts_result = await db.execute(
+            select(SharedCart)
+            .options(
+                joinedload(SharedCart.orders).joinedload(Order.order_items).joinedload(OrderItem.item),
+                joinedload(SharedCart.contributors).joinedload(SharedCartContributor.user),
+                joinedload(SharedCart.shared_cart_items).joinedload(SharedCartItem.item),
+                joinedload(SharedCart.supermarket),
+            )
+            .where(SharedCart.id.in_(shared_cart_ids))
+            .order_by(SharedCart.created_at.desc())
+        )
+        shared_carts = shared_carts_result.unique().scalars().all()
+
+        shared_order_details = []
+
+        # Step 3: Process shared carts
+        for shared_cart in shared_carts:
+            # Step 3.1: Fetch delivery fee from supermarket
+            delivery_fee = shared_cart.supermarket.delivery_fee or 0.0
+            num_contributors = len(shared_cart.contributors)
+            split_delivery_fee = delivery_fee / num_contributors if num_contributors > 0 else 0.0
+
+            # Step 3.2: Aggregate contributor details
+            contributor_contributions = []
+            for contributor in shared_cart.contributors:
+                # Fetch items contributed by the user
+                user_items = [
+                    OrderItemDetail(
+                        item_id=item.item.id,
+                        name=item.item.name,
+                        price=item.price,
+                        quantity=item.quantity,
+                        total_cost=item.price * item.quantity,
+                    )
+                    for item in shared_cart.shared_cart_items
+                    if item.contributor_id == contributor.id
+                ]
+
+                # Calculate the user's total contribution (items + delivery fee)
+                delivery_fee_contribution = contributor.delivery_fee_contribution or 0.0
+                total_contribution = sum(item.total_cost for item in user_items) + delivery_fee_contribution
+
+                # Add contributor details
+                contributor_contributions.append(
+                    ContributorContribution(
+                        user_id=contributor.user.id,
+                        name=contributor.user.name,
+                        delivery_fee_contribution=delivery_fee_contribution,
+                        total_contribution=total_contribution,
+                        items=user_items,
+                    )
+                )
+
+            # Step 3.3: Process orders in the shared cart
+            for order in shared_cart.orders:
+                # Prepare item list for the order
+                items = [
+                    OrderItemDetail(
+                        item_id=item.item.id,
+                        name=item.item.name,
+                        price=item.item.price,
+                        quantity=item.quantity,
+                        total_cost=item.price * item.quantity,
+                    )
+                    for item in order.order_items
+                ]
+
+                shared_order_detail = SharedOrderDetail(
+                    order_id=order.id,
+                    shared_cart_id=shared_cart.id,
+                    total_cost=order.total_amount,
+                    status=order.status.value,
+                    contributions=contributor_contributions,
+                    items=items,
+                    delivery_fee=delivery_fee,
                 )
                 shared_order_details.append(shared_order_detail)
 

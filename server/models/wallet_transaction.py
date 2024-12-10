@@ -2,13 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Float, DateTime, Enu
 from sqlalchemy.orm import relationship
 from .base import Base
 import datetime
-import enum
-
-
-# Define Enum for Transaction Types
-class TransactionType(enum.Enum):
-    CREDIT = "credit"
-    DEBIT = "debit"
+from server.enums import TransactionType
 
 
 class WalletTransaction(Base):
