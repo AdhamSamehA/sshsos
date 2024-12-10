@@ -1,13 +1,15 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
-import Supermarkets from "./components/supermarkets";
-import SupermarketShopping from "./components/SupermarketShopping";
-import Items from "./components/Items";
-import CartPage from "./components/CartPage";
-import Account from "./components/Account";
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import Supermarkets from './components/supermarkets';
+import SupermarketShopping from './components/SupermarketShopping';
+import Items from './components/Items';
+import CartPage from './components/CartPage';
+import CheckoutPage from './components/CheckoutPage';
+import OrderConfirmationPage from './components/OrderConfirmationPage';
+import Account from './components/Account';
 import WalletTopUp from "./components/WalletTopUp"; // Import WalletTopUp component
 import TotalOrders from "./components/TotalOrders"; // Import TotalOrders component
-import "./App.css";
+import './App.css';
 
 function App() {
   return (
@@ -47,6 +49,8 @@ function App() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
             <Route path="/wallet-topup" element={<WalletTopUp />} /> {/* Add WalletTopUp route */}
             <Route path="/total-orders" element={<TotalOrders />} /> {/* Add TotalOrders route */}
           </Routes>
