@@ -1,44 +1,64 @@
-/* Container to hold all category buttons */
-.categories-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-  padding: 30px; /* Increased padding */
+/* Main container for the Supermarket Shopping page */
+.supermarket-shopping {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  min-height: 100vh;
 }
 
-/* Style for each category button */
-.category-button {
-  background-color: #4CAF50; /* New background color */
-  border: 1px solid #388E3C; /* Darker green border */
-  border-radius: 12px; /* Slightly rounder edges */
-  padding: 15px; /* Increased padding */
-  width: 180px; /* Increased width */
+/* Header styling */
+.header {
+  background-color: #ff3366;
+  color: white;
   text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2); /* Larger shadow */
+  padding: 10px;
+  border-radius: 8px;
 }
 
-/* Hover effect for buttons */
-.category-button:hover {
-  background-color: #45a049; /* Slightly darker green on hover */
-  box-shadow: 0px 4px 25px rgba(0, 0, 0, 0.3); /* Stronger shadow on hover */
-}
-
-/* Style for category image inside button */
-.category-image img {
-  width: 100%;
-  height: 120px; /* Increased height */
-  object-fit: cover;
-  border-radius: 8px; /* More rounded corners for image */
-  margin-bottom: 12px; /* Increased space below the image */
-}
-
-/* Style for category name text */
-.category-button p {
-  font-size: 16px; /* Increased font size */
-  color: #ffffff; /* White text for better contrast */
-  font-weight: bold;
+.header h2 {
   margin: 0;
+  font-size: 24px;
+}
+
+/* Categories container */
+.categories-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Explicitly set 4 categories per row */
+  gap: 20px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Individual category card */
+.category-card {
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px; /* Increased padding for a larger appearance */
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Category image */
+.category-image {
+  width: 100%;
+  height: 120px; /* Increased height for larger images */
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 15px; /* More space below the image */
+}
+
+/* Category name */
+.category-name {
+  font-size: 16px; /* Slightly larger font size for better visibility */
+  font-weight: bold;
+  color: #333;
 }

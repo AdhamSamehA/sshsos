@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "./supermarkets.css";
 
 // Replace with your API URLs
 const SUPERMARKET_FEED_API = "http://localhost:5200/supermarket/feed";
 const USER_ACCOUNT_API = "http://localhost:5200/user/account?user_id=1";
 
-export default function SupermarketScreen({ navigation }) {
+export default function Supermarkets() {
   const [supermarkets, setSupermarkets] = useState([]);
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // Initialize navigate
 
   // Fetch user default address
   const fetchUserAddress = async () => {
@@ -39,12 +41,7 @@ export default function SupermarketScreen({ navigation }) {
   }, []);
 
   const handleSupermarketClick = (supermarketId) => {
-    // Navigate or perform an action
-    if (navigation) {
-      navigation.navigate("CategoriesPage", { supermarketId });
-    } else {
-      console.log("Supermarket clicked:", supermarketId);
-    }
+    navigate(`/supermarketshopping/${supermarketId}`); // Navigate to SupermarketShopping
   };
 
   if (loading) {
@@ -69,7 +66,7 @@ export default function SupermarketScreen({ navigation }) {
           <div
             key={item.id}
             className="supermarketCard"
-            onClick={() => handleSupermarketClick(item.id)}
+            onClick={() => handleSupermarketClick(item.id)} // Handle click to navigate
           >
             <img
               src={item.photo_url}
