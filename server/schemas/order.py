@@ -97,6 +97,7 @@ class SharedOrderDetail(BaseModel):
     contributors: List[ContributorDetail]
     items: List[OrderItemDetail]
     delivery_fee: float
+    contributions : Optional[List]
 
     class Config:
         orm_mode = True
@@ -112,3 +113,20 @@ class OrderDetailResponse(BaseModel):
     contributors: List[ContributorDetail] = []  # Empty for normal orders
     items: List[OrderItemDetail]
     delivery_fee: float
+
+
+class ContributorContribution(BaseModel):
+    user_id: int
+    name: str
+    total_contribution: float
+    delivery_fee_contribution: float
+    items: List[OrderItemDetail] 
+
+class SharedOrderDetail(BaseModel):
+    order_id: int
+    shared_cart_id: int
+    total_cost: float
+    status: str
+    items: List[OrderItemDetail]
+    delivery_fee: float
+    contributions: List[ContributorContribution] 

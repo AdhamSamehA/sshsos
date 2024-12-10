@@ -6,12 +6,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Float, DateTime
 from sqlalchemy.orm import relationship
 from .base import Base
 from sqlalchemy.types import Enum
-import enum
-
-# Enumerations for cart status
-class CartStatus(enum.Enum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
+from server.enums import CartStatus
 
 class Cart(Base):
     __tablename__ = "carts"
