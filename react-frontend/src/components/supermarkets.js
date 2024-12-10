@@ -1,67 +1,92 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './supermarkets.css'; // Import CSS for styling
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import "./supermarkets.css";
 
-const Supermarkets = () => {
+// Replace with your API URLs
+const SUPERMARKET_FEED_API = "http://localhost:5200/supermarket/feed";
+const USER_ACCOUNT_API = "http://localhost:5200/user/account?user_id=1";
+
+export default function Supermarkets() {
   const [supermarkets, setSupermarkets] = useState([]);
+  const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Initialize navigate
 
-  // Fetch supermarkets data
-  useEffect(() => {
-    const fetchSupermarkets = async () => {
-      try {
-        const response = await axios.get('http://localhost:5200/supermarket/feed');
-        setSupermarkets(response.data.supermarkets);
-      } catch (err) {
-        setError('Error fetching supermarkets');
-        console.error(err);
-      }
+  // Fetch user default address
+  const fetchUserAddress = async () => {
+    try {
+      const response = await axios.get(USER_ACCOUNT_API);
+      setAddress(response.data.default_address);
+    } catch (error) {
+      console.error("Error fetching user address:", error);
+    }
+  };
+
+  // Fetch supermarkets
+  const fetchSupermarkets = async () => {
+    try {
+      const response = await axios.get(SUPERMARKET_FEED_API);
+      setSupermarkets(response.data.supermarkets);
+    } catch (error) {
+      console.error("Error fetching supermarket feed:", error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
+  useEffect(() => {
+    fetchUserAddress();
     fetchSupermarkets();
   }, []);
 
-  // Handle navigation to the shopping page
-  const handleNavigate = (supermarketId) => {
-    navigate(`/supermarketshopping/${supermarketId}`);
+  const handleSupermarketClick = (supermarketId) => {
+    navigate(`/supermarketshopping/${supermarketId}`); // Navigate to SupermarketShopping
   };
 
-  return (
-    <div className="supermarket-container">
-      <h2>Available Supermarkets</h2>
+  if (loading) {
+    return (
+      <div className="loadingContainer">
+        <div className="loader">Loading...</div>
+      </div>
+    );
+  }
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : error ? (
-        <p>{error}</p>
-      ) : (
-        <div className="supermarket-list">
-          {supermarkets.map((supermarket) => (
-            <div
-              key={supermarket.id}
-              className="supermarket-card"
-              onClick={() => handleNavigate(supermarket.id)}
-            >
-              <img
-                src={supermarket.photo_url}
-                alt={supermarket.name}
-                className="supermarket-image"
-              />
-              <div className="supermarket-details">
-                <h3>{supermarket.name}</h3>
-                <p><strong>Address:</strong> {supermarket.address}</p>
-                <p><strong>Phone:</strong> {supermarket.phone_number}</p>
+  return (
+    <div className="mainContainer">
+      {/* Address Bar */}
+      <div className="addressBar">
+        <p className="addressText">Delivering to:</p>
+        <p className="address">{address}</p>
+      </div>
+
+      {/* Supermarkets List */}
+      <div className="supermarketsContainer">
+        {supermarkets.map((item) => (
+          <div
+            key={item.id}
+            className="supermarketCard"
+            onClick={() => handleSupermarketClick(item.id)} // Handle click to navigate
+          >
+            <img
+              src={item.photo_url}
+              alt={item.name}
+              className="supermarketImage"
+            />
+            <div className="supermarketDetails">
+              <h3 className="supermarketName">{item.name}</h3>
+              <p className="supermarketMeta">{item.address}</p>
+              <div className="supermarketExtras">
+                <p className="deliveryTime">15 mins</p>
+                <div className="ratingContainer">
+                  <span className="rating">4.7</span>
+                  <span className="ratingText">(500+)</span>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
-};
-
-export default Supermarkets;
+}

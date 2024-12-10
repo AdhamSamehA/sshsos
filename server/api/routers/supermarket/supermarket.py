@@ -30,24 +30,20 @@ async def get_supermarket_feed(
     if not supermarkets:
         return SupermarketFeedResponse(success=True, supermarkets=[])
 
-    # Format the response data
+    formatted_supermarkets = [
+        {
+            "id": supermarket.id,
+            "name": supermarket.name,
+            "address": supermarket.address,
+            "phone_number": supermarket.phone_number,
+            "photo_url": supermarket.photo_url,
+        }
+        for supermarket in supermarkets
+    ]
+
+    # Return the formatted response
     return SupermarketFeedResponse(
         success=True,
-        supermarkets=[
-            {
-                "id": 1,
-                "name": "Supermarket A",
-                "address": "123 Main St, City",
-                "phone_number": "123-456-7890",
-                "photo_url": "https://www.dealzbook.ae/filemanager/uploads/myviva-logo.webp"
-            },
-            {
-                "id": 2,
-                "name": "Supermarket B",
-                "address": "456 Elm St, Town",
-                "phone_number": "987-654-3210",
-                "photo_url": "https://t4.ftcdn.net/jpg/02/98/00/31/360_F_298003130_m46tOGOvzZjxXjP61HjVxY5awE9qU406.jpg"
-            }
-        ]
+        supermarkets=formatted_supermarkets
     )
 

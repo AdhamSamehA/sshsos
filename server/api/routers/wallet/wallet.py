@@ -3,8 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload, joinedload
 from datetime import datetime
+from typing import List
 
-from server.schemas import WalletTopUpRequest, WalletPaymentRequest, WalletResponse
+from server.schemas import WalletTopUpRequest, WalletPaymentRequest, WalletResponse, WalletTransactionResponse
 from server.dependencies import get_db
 from server.models import Wallet, WalletTransaction, User
 from server.models.wallet_transaction import TransactionType
@@ -123,3 +124,29 @@ async def check_wallet_balance(user_id: int, db: AsyncSession = Depends(get_db))
         balance=balance,
         message="Wallet balance retrieved successfully."
     )
+
+@router.get("/wallet/transactions", response_model=List[WalletTransactionResponse])
+async def fetch_transaction_history(user_id: int, db: AsyncSession = Depends(get_db)) -> List[WalletTransactionResponse]:
+    """
+    Fetch the transaction history for a given user.
+    """
+    # Fetch the user with the wallet eagerly loaded
+    stmt = select(User).options(selectinload(User.wallet)).where(User.id == user_id)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+
+    if not user or not user.wallet:
+        raise HTTPException(status_code=404, detail="User or wallet not found.")
+
+    wallet = user.wallet
+
+    # Fetch transaction history
+    transaction_stmt = (
+        select(WalletTransaction)
+        .where(WalletTransaction.wallet_id == wallet.id)
+        .order_by(WalletTransaction.created_at.desc())
+    )
+    transactions_result = await db.execute(transaction_stmt)
+    transactions = transactions_result.scalars().all()
+
+    return transactions

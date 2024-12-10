@@ -1,5 +1,14 @@
 {
   "dependencies": {
+<<<<<<< HEAD
+    "axios": "^1.7.9",
+    "react-icons": "^5.4.0",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+=======
     "react-router-dom": "^7.0.2"
+>>>>>>> 09449f37a918d8056c8fceab8e79208bd5acc9f2
   }
 }
