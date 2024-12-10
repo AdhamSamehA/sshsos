@@ -6,6 +6,7 @@ import Items from "./components/Items";
 import CartPage from "./components/CartPage";
 import Account from "./components/Account";
 import WalletTopUp from "./components/WalletTopUp"; // Import WalletTopUp component
+import TotalOrders from "./components/TotalOrders"; // Import TotalOrders component
 import "./App.css";
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/account" element={<Account />} />
             <Route path="/wallet-topup" element={<WalletTopUp />} /> {/* Add WalletTopUp route */}
+            <Route path="/total-orders" element={<TotalOrders />} /> {/* Add TotalOrders route */}
           </Routes>
         </main>
       </div>

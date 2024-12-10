@@ -6,10 +6,10 @@ function Account() {
   const [accountDetails, setAccountDetails] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
-
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Fetch account details
     const fetchAccountDetails = async () => {
       try {
         const response = await fetch("http://localhost:5200/user/account?user_id=1");
@@ -18,19 +18,27 @@ function Account() {
         }
         const data = await response.json();
         setAccountDetails(data);
-
-        // Mock addresses for now
-        setAddresses([
-          "123 Main Street, Springfield",
-          "456 Elm Street, Shelbyville",
-          "789 Oak Avenue, Capital City",
-        ]);
       } catch (error) {
         console.error("Failed to fetch account details:", error);
       }
     };
 
+    // Fetch addresses using the Order API
+    const fetchAddresses = async () => {
+      try {
+        const response = await fetch("http://localhost:5200/user/addresses?user_id=1");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setAddresses(data.addresses.map((address) => address.address_details)); // Extract address details
+      } catch (error) {
+        console.error("Failed to fetch addresses:", error);
+      }
+    };
+
     fetchAccountDetails();
+    fetchAddresses();
   }, []);
 
   const handleAddressEdit = () => {
@@ -60,10 +68,7 @@ function Account() {
             <p>${accountDetails.wallet_balance.toFixed(2)}</p>
           </div>
           <div className="account-action">
-            <button
-              className="button"
-              onClick={() => navigate("/wallet-topup")}
-            >
+            <button className="button" onClick={() => navigate("/wallet-topup")}>
               Top Up
             </button>
           </div>
@@ -102,10 +107,7 @@ function Account() {
             <p>{accountDetails.total_orders}</p>
           </div>
           <div className="account-action">
-            <button
-              className="button"
-              onClick={() => navigate("/total-orders")}
-            >
+            <button className="button" onClick={() => navigate("/total-orders")}>
               View Orders
             </button>
           </div>
