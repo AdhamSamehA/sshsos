@@ -11,3 +11,4 @@ passlib[bcrypt]
 pandas
 httpx
 pytest 
+pytest-asyncio
