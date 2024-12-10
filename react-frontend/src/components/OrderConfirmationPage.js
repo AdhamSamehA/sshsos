@@ -1,11 +1,10 @@
-// OrderConfirmationPage.js
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./OrderConfirmationPage.css";
 
 const OrderConfirmationPage = () => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Correctly define navigate using the hook
   const { address, deliveryTime } = location.state || {};
 
   return (

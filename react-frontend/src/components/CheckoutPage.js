@@ -1,4 +1,3 @@
-// CheckoutPage.js
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -7,17 +6,18 @@ import "./CheckoutPage.css";
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const cartId = localStorage.getItem("cartId");
-  const [walletBalance, setWalletBalance] = useState(0); // Wallet balance
-  const [addresses, setAddresses] = useState([]); // Address slots
-  const [selectedAddress, setSelectedAddress] = useState(""); // Selected address
-  const [selectedSlot, setSelectedSlot] = useState("now"); // Delivery option
-  const [deliverySlots, setDeliverySlots] = useState([]); // Delivery slots
-  const [showSchedule, setShowSchedule] = useState(false); // Show scheduling options
-  const [cartItems, setCartItems] = useState([]); // Cart items
-  const [basketValue, setBasketValue] = useState(0); // Basket Value
-  const [deliveryFee, setDeliveryFee] = useState(5); // Delivery Fee (fixed for now)
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(""); // Error state
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState("now");
+  const [deliverySlots, setDeliverySlots] = useState([]);
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [basketValue, setBasketValue] = useState(0);
+  const [deliveryFee, setDeliveryFee] = useState(5);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     const fetchCheckoutDetails = async () => {
@@ -28,12 +28,9 @@ const CheckoutPage = () => {
           return;
         }
 
-        // Fetch cart details
         const cartResponse = await axios.get(
           `http://localhost:5200/carts/${cartId}`
         );
-
-        // Calculate basket value
         const items = cartResponse.data.items || [];
         const basketValue = items.reduce(
           (total, item) => total + item.price * item.quantity,
@@ -42,29 +39,26 @@ const CheckoutPage = () => {
 
         setCartItems(items);
         setBasketValue(basketValue);
+        setDeliveryFee(5);
 
-        // Fetch user addresses
         const addressResponse = await axios.get(
           `http://localhost:5200/user/addresses?user_id=1`
         );
 
         setAddresses(addressResponse.data.addresses || []);
-
         if (addressResponse.data.addresses.length > 0) {
-          setSelectedAddress(addressResponse.data.addresses[0].address_details); // Default to the first address
+          setSelectedAddress(addressResponse.data.addresses[0].address_details);
         }
 
-        // Fetch wallet balance
         const walletResponse = await axios.get(
           `http://localhost:5200/wallet/balance?user_id=1`
         );
 
         setWalletBalance(walletResponse.data.balance || 0);
 
-        // Fetch delivery slots
         const slotsResponse = await axios.get(
           `http://localhost:5200/orders/slots?supermarket_id=1`
-        ); // Replace with dynamic supermarket ID if needed
+        );
         setDeliverySlots(slotsResponse.data.available_slots || []);
       } catch (err) {
         console.error("Error fetching checkout details:", err);
@@ -76,18 +70,58 @@ const CheckoutPage = () => {
     fetchCheckoutDetails();
   }, [cartId]);
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!cartId) {
       alert("Cart not found. Please create a cart first.");
       return;
     }
 
-    navigate("/order-confirmation", {
-      state: {
-        address: selectedAddress,
-        deliveryTime: selectedSlot === "now" ? "15 mins" : selectedSlot,
-      },
-    });
+    const selectedAddressId = addresses.find(
+      (addr) => addr.address_details === selectedAddress
+    )?.address_id;
+
+    if (!selectedAddressId) {
+      alert("Please select a valid address.");
+      return;
+    }
+
+    if (!selectedSlot) {
+      alert("Please select a delivery option.");
+      return;
+    }
+
+    if (redirecting) return;
+    setRedirecting(true);
+
+    try {
+      const response = await axios.post(
+        `http://localhost:5200/carts/${cartId}/submit-delivery`,
+        {
+          user_id: 1,
+          supermarket_id: 1,
+          address_id: selectedAddressId,
+          order_time: selectedSlot,
+        }
+      );
+
+      if (response.data && response.data.message === "Order placed successfully. Cart has been marked as inactive.") {
+        navigate("/order-confirmation", {
+          state: {
+            orderDetails: response.data,
+            address: selectedAddress,
+            deliveryTime: selectedSlot === "now" ? "in 15 mins" : `at ${selectedSlot}`,
+          },
+        });
+      } else {
+        console.error("Unexpected response:", response.data);
+        alert("Failed to place the order. Please try again.");
+        setRedirecting(false);
+      }
+    } catch (error) {
+      console.error("Error placing the order:", error);
+      alert("Failed to place the order. Please try again.");
+      setRedirecting(false);
+    }
   };
 
   const toggleScheduleOrder = () => setShowSchedule(!showSchedule);
@@ -101,7 +135,6 @@ const CheckoutPage = () => {
     <div className="checkout-page">
       <h2>Checkout</h2>
 
-      {/* Delivery Options */}
       <div className="section">
         <h3>Delivery</h3>
         <div className="delivery-buttons">
@@ -136,7 +169,6 @@ const CheckoutPage = () => {
         )}
       </div>
 
-      {/* Address */}
       <div className="section">
         <h3>Address</h3>
         <select
@@ -151,7 +183,6 @@ const CheckoutPage = () => {
         </select>
       </div>
 
-      {/* Cart Items */}
       <div className="section">
         <h3>Cart Items</h3>
         {cartItems.map((item) => (
@@ -163,7 +194,6 @@ const CheckoutPage = () => {
         ))}
       </div>
 
-      {/* Payment Details */}
       <div className="section">
         <h3>Payment Summary</h3>
         <p>Basket Value: AED {basketValue.toFixed(2)}</p>
@@ -172,11 +202,10 @@ const CheckoutPage = () => {
         <p>Wallet Balance: AED {walletBalance.toFixed(2)}</p>
       </div>
 
-      {/* Place Order */}
       <button
         className="pay-button"
         onClick={handlePlaceOrder}
-        disabled={walletBalance < totalAmount}
+        disabled={walletBalance < totalAmount || redirecting}
       >
         Pay Now (AED {totalAmount.toFixed(2)} - Wallet Balance: AED{" "}
         {walletBalance.toFixed(2)})
