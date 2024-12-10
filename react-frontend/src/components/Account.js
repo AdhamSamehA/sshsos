@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Account.css";
 
 function Account() {
   const [accountDetails, setAccountDetails] = useState(null);
   const [addresses, setAddresses] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAccountDetails = async () => {
@@ -23,7 +25,6 @@ function Account() {
           "456 Elm Street, Shelbyville",
           "789 Oak Avenue, Capital City",
         ]);
-        setSelectedAddress(data.default_address); // Set the initial selected address
       } catch (error) {
         console.error("Failed to fetch account details:", error);
       }
@@ -32,18 +33,16 @@ function Account() {
     fetchAccountDetails();
   }, []);
 
-  const handleAddressChange = (address) => {
-    setSelectedAddress(address);
-    setIsModalOpen(false); // Close the modal after selection
+  const handleAddressEdit = () => {
+    setShowDropdown((prev) => !prev); // Toggle dropdown visibility
+  };
 
-    // Optionally send the new address to the backend
-    console.log(`Set new default address: ${address}`);
-    // Example API call to update default address
-    // fetch("http://localhost:5200/user/update-address", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ user_id: 1, new_address: address }),
-    // });
+  const handleSelectAddress = (address) => {
+    setAccountDetails((prev) => ({
+      ...prev,
+      default_address: address,
+    }));
+    setShowDropdown(false); // Close dropdown after selection
   };
 
   if (!accountDetails) {
@@ -52,44 +51,62 @@ function Account() {
 
   return (
     <div className="account-container">
-      <h2>Account Details</h2>
-      <div className="account-item">
-        <strong>Wallet Balance:</strong> ${accountDetails.wallet_balance.toFixed(2)}
-        <button className="button">TOP UP</button>
-      </div>
-      <div className="account-item">
-        <strong>Default Address:</strong>
-        <span className="default-address" onClick={() => setIsModalOpen(true)}>
-          {selectedAddress}
-        </span>
-      </div>
-      <div className="account-item">
-        <strong>Total Orders:</strong>
-        <span className="clickable"> {accountDetails.total_orders}</span>
-      </div>
+      <h2>My Account</h2>
+      <div className="account-list">
+        {/* Wallet Balance */}
+        <div className="account-item">
+          <div className="account-icon">
+            <i className="fas fa-wallet"></i>
+          </div>
+          <div className="account-info">
+            <h4>Wallet Balance</h4>
+            <p>${accountDetails.wallet_balance.toFixed(2)}</p>
+          </div>
+          <div className="account-action">
+            <button className="button">Top Up</button>
+          </div>
+        </div>
 
-      {/* Modal for address selection */}
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>Select Address</h3>
-            <ul className="address-list">
-              {addresses.map((address, index) => (
-                <li
-                  key={index}
-                  className={`address-item ${address === selectedAddress ? "selected" : ""}`}
-                  onClick={() => handleAddressChange(address)}
-                >
-                  {address}
-                </li>
-              ))}
-            </ul>
-            <button className="button close-btn" onClick={() => setIsModalOpen(false)}>
-              Close
+        {/* Default Address */}
+        <div className="account-item">
+          <div className="account-icon">
+            <i className="fas fa-map-marker-alt"></i>
+          </div>
+          <div className="account-info">
+            <h4>Default Address</h4>
+            <p>{accountDetails.default_address}</p>
+            {showDropdown && (
+              <ul className="dropdown-list">
+                {addresses.map((address, index) => (
+                  <li
+                    key={index}
+                    onClick={() => handleSelectAddress(address)}
+                    className="dropdown-item"
+                  >
+                    {address}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="account-action">
+            <button className="button" onClick={handleAddressEdit}>
+              Edit
             </button>
           </div>
         </div>
-      )}
+
+        {/* Total Orders */}
+        <div className="account-item" onClick={() => navigate("/total-orders")}>
+          <div className="account-icon">
+            <i className="fas fa-shopping-basket"></i>
+          </div>
+          <div className="account-info">
+            <h4>Total Orders</h4>
+            <p>{accountDetails.total_orders}</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,72 +1,95 @@
-/* Modal Overlay */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-  
-  /* Modal */
-  .modal {
-    background: white;
+/* General Styling */
+.account-container {
+    background-color: #f4f4f4;
     padding: 20px;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #ff3366;
+    font-weight: bold;
+  }
+  
+  /* Account List */
+  .account-list {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .account-item {
+    background: white;
+    padding: 15px 20px;
     border-radius: 8px;
-    width: 300px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #ddd;
   }
   
-  /* Modal Title */
-  .modal h3 {
-    margin: 0 0 20px;
+  .account-info {
+    flex: 1;
+    text-align: left;
   }
   
-  /* Address List */
-  .address-list {
+  .account-info h4 {
+    margin: 0 0 5px;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .account-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  /* Button Styling */
+  .button {
+    background-color: #ff3366;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .button:hover {
+    background-color: #d12a58;
+  }
+  
+  /* Dropdown List */
+  .dropdown-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 20px;
+    margin: 10px 0 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    z-index: 1000;
+    width: calc(100% - 40px); /* Match the width of the container */
   }
   
-  .address-item {
-    padding: 10px;
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
-    border-radius: 4px;
+  .dropdown-item {
+    padding: 10px 15px;
     cursor: pointer;
     transition: background-color 0.2s ease;
   }
   
-  .address-item:hover {
-    background-color: #f9f9f9;
-  }
-  
-  .address-item.selected {
-    background-color: #ff3366;
-    color: white;
-    font-weight: bold;
-  }
-  
-  /* Close Button */
-  .close-btn {
-    background-color: #d12a58;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    text-transform: uppercase;
-    font-size: 14px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .close-btn:hover {
-    background-color: #a81e43;
+  .dropdown-item:hover {
+    background-color: #f4f4f4;
+    color: #ff3366;
   }
   
