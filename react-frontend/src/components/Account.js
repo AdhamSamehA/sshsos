@@ -55,55 +55,59 @@ function Account() {
       <div className="account-list">
         {/* Wallet Balance */}
         <div className="account-item">
-          <div className="account-icon">
-            <i className="fas fa-wallet"></i>
-          </div>
           <div className="account-info">
             <h4>Wallet Balance</h4>
             <p>${accountDetails.wallet_balance.toFixed(2)}</p>
           </div>
           <div className="account-action">
-            <button className="button">Top Up</button>
+            <button
+              className="button"
+              onClick={() => navigate("/wallet-topup")}
+            >
+              Top Up
+            </button>
           </div>
         </div>
 
         {/* Default Address */}
         <div className="account-item">
-          <div className="account-icon">
-            <i className="fas fa-map-marker-alt"></i>
-          </div>
           <div className="account-info">
             <h4>Default Address</h4>
             <p>{accountDetails.default_address}</p>
-            {showDropdown && (
-              <ul className="dropdown-list">
-                {addresses.map((address, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleSelectAddress(address)}
-                    className="dropdown-item"
-                  >
-                    {address}
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
           <div className="account-action">
             <button className="button" onClick={handleAddressEdit}>
-              Edit
+              Select Address
             </button>
           </div>
         </div>
+        {showDropdown && (
+          <ul className="dropdown-list">
+            {addresses.map((address, index) => (
+              <li
+                key={index}
+                onClick={() => handleSelectAddress(address)}
+                className="dropdown-item"
+              >
+                {address}
+              </li>
+            ))}
+          </ul>
+        )}
 
         {/* Total Orders */}
-        <div className="account-item" onClick={() => navigate("/total-orders")}>
-          <div className="account-icon">
-            <i className="fas fa-shopping-basket"></i>
-          </div>
+        <div className="account-item">
           <div className="account-info">
             <h4>Total Orders</h4>
             <p>{accountDetails.total_orders}</p>
+          </div>
+          <div className="account-action">
+            <button
+              className="button"
+              onClick={() => navigate("/total-orders")}
+            >
+              View Orders
+            </button>
           </div>
         </div>
       </div>

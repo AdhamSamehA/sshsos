@@ -1,0 +1,113 @@
+.wallet-topup-container {
+    background-color: #f4f4f4;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 50px;
+  }
+  
+  .wallet-topup-box {
+    background-color: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  .wallet-topup-box h2 {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ff3366;
+    margin-bottom: 10px;
+  }
+  
+  .wallet-topup-box p {
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: #555;
+  }
+  
+  .wallet-topup-box .current-balance {
+    font-size: 18px;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+  
+  .wallet-topup-box input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  
+  .wallet-topup-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  }
+  
+  .button {
+    background-color: #ff3366;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .button:hover {
+    background-color: #d12a58;
+  }
+  
+  .button.cancel {
+    background-color: #ddd;
+    color: #333;
+  }
+  
+  .button.cancel:hover {
+    background-color: #bbb;
+  }
+  
+  .message-box {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .success-message {
+    color: #4caf50; /* Green for success */
+    border: 1px solid #4caf50;
+    background-color: #e8f5e9; /* Light green background */
+  }
+  
+  .error-message {
+    color: #f44336; /* Red for error */
+    border: 1px solid #f44336;
+    background-color: #fdecea; /* Light red background */
+  }
+
+  /* Additional Styling for the Redirect Message */
+.redirect-message {
+    color: #ff3366;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .redirect-message:hover {
+    color: #d12a58;
+  }
+  
+  
