@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
-from server.main import app  # Replace 'server.main' with your FastAPI entrypoint file
+from server.app import app  # Replace 'server.main' with your FastAPI entrypoint file
 from server.models import User, Supermarket, Cart
 from server.schemas import CreateCartRequest
 from server.models.carts import CartStatus
