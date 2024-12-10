@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './Items.css'; // CSS for styling
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import "./Items.css"; // CSS for styling
 
 const Items = () => {
   const { supermarketId, categoryId } = useParams(); // Get IDs from the URL
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [items, setItems] = useState([]); // List of items in the current category
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
+  const [cartId, setCartId] = useState(localStorage.getItem("cartId") || null); // Persistent cart ID
+  const [cartItems, setCartItems] = useState(JSON.parse(localStorage.getItem("cartItems")) || []); // Persistent cart items
   const [addedToCart, setAddedToCart] = useState(false); // To show the popup
-  const [cartItems, setCartItems] = useState([]); // To track items in the cart
+  const [addedItem, setAddedItem] = useState(null); // Tracks the item added to the cart
   const navigate = useNavigate();
 
   // Fetch items based on supermarketId and categoryId
@@ -21,7 +23,7 @@ const Items = () => {
         );
         setItems(response.data.items); // Set items from the backend
       } catch (err) {
-        setError('Error fetching items');
+        setError("Error fetching items");
         console.error(err);
       }
       setLoading(false);
@@ -30,30 +32,70 @@ const Items = () => {
     fetchItems();
   }, [supermarketId, categoryId]);
 
-  // Add item to cart simulation
+  // Create a cart if it doesn't already exist
+  const createCart = async () => {
+    if (!cartId) {
+      try {
+        const response = await axios.post(`http://localhost:5200/carts/create`, {
+          user_id: 1, // Replace with the actual user ID
+          supermarket_id: supermarketId,
+        });
+        const newCartId = response.data.cart_id;
+        setCartId(newCartId); // Store the created cart ID
+        localStorage.setItem("cartId", newCartId); // Persist cart ID
+      } catch (err) {
+        console.error("Error creating cart:", err);
+      }
+    }
+  };
+
+  // Add item to the cart
   const addToCart = async (item) => {
     try {
-      // Here we simulate adding the item to the cart.
-      // Normally, you would call an API to add the item to the backend cart.
+      // Create the cart if it doesn't exist
+      await createCart();
 
-      // Add the item to the cart array (mocking the backend operation)
-      setCartItems([...cartItems, { ...item, quantity: 1 }]);
+      // Add the item to the cart in the backend
+      await axios.post(`http://localhost:5200/carts/${cartId}/add-item`, {
+        item_id: item.id,
+        quantity: 1, // Default quantity to add
+      });
 
-      // Show the popup confirmation
+      // Update the cart items locally
+      const existingItem = cartItems.find((cartItem) => cartItem.id === item.id);
+      if (existingItem) {
+        // Update the quantity of the existing item
+        const updatedCartItems = cartItems.map((cartItem) =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+        setCartItems(updatedCartItems);
+        localStorage.setItem("cartItems", JSON.stringify(updatedCartItems));
+      } else {
+        // Add a new item to the cart
+        const updatedCartItems = [...cartItems, { ...item, quantity: 1 }];
+        setCartItems(updatedCartItems);
+        localStorage.setItem("cartItems", JSON.stringify(updatedCartItems));
+      }
+
+      // Show the popup with the item added
       setAddedToCart(true);
+      setAddedItem(item);
 
-      // Set a timeout to hide the popup after 2 seconds
+      // Hide the popup after 2 seconds
       setTimeout(() => {
         setAddedToCart(false);
+        setAddedItem(null);
       }, 2000);
     } catch (err) {
-      console.error('Error adding item to cart:', err);
+      console.error("Error adding item to cart:", err);
     }
   };
 
   // Navigate to the Cart page
   const viewCart = () => {
-    navigate('/cart');
+    navigate("/cart"); // Navigate to the cart page
   };
 
   return (
@@ -79,7 +121,7 @@ const Items = () => {
                 <div className="item-details">
                   <h3>{item.name}</h3>
                   <p>{item.description}</p>
-                  <p>Price: ${item.price}</p>
+                  <p>Price: ${item.price.toFixed(2)}</p>
                   <button onClick={() => addToCart(item)}>Add to Cart</button>
                 </div>
               </div>
@@ -93,12 +135,17 @@ const Items = () => {
       {/* Confirmation Popup */}
       {addedToCart && (
         <div className="popup">
-          <p>Item added to cart!</p>
+          <p>{addedItem?.name} added to cart!</p>
+          <button onClick={viewCart}>View Cart</button>
         </div>
       )}
 
-      {/* View Cart Button */}
-      <button className="view-cart-btn" onClick={viewCart}>View Cart</button>
+      {/* View Cart Button (only if cart is created) */}
+      {cartId && (
+        <button className="view-cart-btn" onClick={viewCart}>
+          View Cart
+        </button>
+      )}
     </div>
   );
 };
