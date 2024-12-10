@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 # Request model for topping up the wallet
 class WalletTopUpRequest(BaseModel):
@@ -15,3 +16,14 @@ class WalletResponse(BaseModel):
 class WalletPaymentRequest(BaseModel):
     user_id : int
     amount: float = Field(..., gt=0, description="Amount to deduct from the wallet.")
+
+class WalletTransactionResponse(BaseModel):
+    id: int
+    wallet_id: int
+    user_id: int
+    amount: float
+    transaction_type: str
+    created_at: datetime
+
+    class Config:
+        orm_mode = True

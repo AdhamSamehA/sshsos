@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 from sqlalchemy.future import select
 from server.models import Cart, Supermarket, Item, StockLevel, User, CartItems, WalletTransaction, OrderSlot
-from server.models.carts import CartStatus
+from server.enums import CartStatus
 from server.dependencies import get_db
 from server.utils import handle_schedule_order, handle_order_now
 from server.schemas import CreateCartRequest, CartResponse, AddItemRequest, RemoveItemRequest, ViewCartResponse, CartItemResponse, SubmitDeliveryDetailsResponse, SubmitDeliveryDetailsRequest
@@ -352,5 +352,4 @@ async def submit_delivery_details(cart_id: int, request: SubmitDeliveryDetailsRe
     else:
         # Validate order slot and handle shared cart logic
         return await handle_schedule_order(cart_id, request, db)
-
 

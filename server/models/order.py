@@ -11,13 +11,7 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Enum
 from .base import Base
-import enum
-
-# Enumerations for order status
-class OrderStatus(enum.Enum):
-    PENDING = "pending"
-    COMPLETED = "completed"
-    CANCELED = "canceled"
+from server.enums import OrderStatus
 
 # Order model
 class Order(Base):
