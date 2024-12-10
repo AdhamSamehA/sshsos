@@ -1,3 +1,4 @@
+// CheckoutPage.js
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -75,26 +76,18 @@ const CheckoutPage = () => {
     fetchCheckoutDetails();
   }, [cartId]);
 
-  const handlePlaceOrder = async () => {
-    try {
-      if (!cartId) {
-        alert("Cart not found. Please create a cart first.");
-        return;
-      }
-
-      await axios.post(
-        `http://localhost:5200/carts/${cartId}/submit-delivery`,
-        {
-          order_time: selectedSlot, // "now" or a scheduled time
-        }
-      );
-      alert("Order placed successfully!");
-      localStorage.removeItem("cartId"); // Clear the cart ID after order placement
-      navigate("/"); // Redirect to home after placing the order
-    } catch (err) {
-      console.error("Error placing order:", err);
-      alert("Failed to place the order. Please try again.");
+  const handlePlaceOrder = () => {
+    if (!cartId) {
+      alert("Cart not found. Please create a cart first.");
+      return;
     }
+
+    navigate("/order-confirmation", {
+      state: {
+        address: selectedAddress,
+        deliveryTime: selectedSlot === "now" ? "15 mins" : selectedSlot,
+      },
+    });
   };
 
   const toggleScheduleOrder = () => setShowSchedule(!showSchedule);
@@ -121,10 +114,7 @@ const CheckoutPage = () => {
           >
             Order Now (15 mins)
           </button>
-          <button
-            className="delivery-button"
-            onClick={toggleScheduleOrder}
-          >
+          <button className="delivery-button" onClick={toggleScheduleOrder}>
             Schedule Order
           </button>
         </div>

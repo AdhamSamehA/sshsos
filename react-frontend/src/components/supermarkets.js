@@ -37,9 +37,10 @@ export default function Supermarkets() {
   // Handle Supermarket Click: Create cart and navigate to items page
   const handleSupermarketClick = async (supermarketId) => {
     try {
+      const userId = localStorage.getItem("userId") || 1; // Fetch dynamic user ID or fallback to default
       const response = await axios.post(`http://localhost:5200/carts/create`, {
-        user_id: 1, // Replace with actual user ID
-        supermarket_id: supermarketId,
+        user_id: userId, // Dynamic user ID
+        supermarket_id: supermarketId, // Dynamic supermarket ID
       });
       const newCartId = response.data.cart_id;
       localStorage.setItem("cartId", newCartId); // Persist cart ID
