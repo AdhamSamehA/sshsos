@@ -1,74 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./Account.css";
 
-const Account = () => {
-  const { userId } = useParams(); // Get userId from the URL parameter
+function Account() {
   const [accountDetails, setAccountDetails] = useState(null);
-  const [orderHistory, setOrderHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Fetch account details and order history for the user
-  const fetchAccountDetails = async () => {
-    setLoading(true); // Set loading state to true before fetching data
-    try {
-      // Fetch account details
-      const accountResponse = await axios.get(`http://localhost:5200/user/account?user_id=${userId}`);
-      setAccountDetails(accountResponse.data); // Update state with account details
-
-      // Fetch order history for the user
-      const orderResponse = await axios.get(`http://localhost:5200/user/orders?user_id=${userId}`);
-      setOrderHistory(orderResponse.data.orders); // Update state with order history
-    } catch (err) {
-      setError('Error fetching account or order data.');
-      console.error(err);
-    } finally {
-      setLoading(false); // Set loading state to false after fetching data
-    }
-  };
+  const [addresses, setAddresses] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchAccountDetails(); // Call function to fetch data when the component mounts
-  }, [userId]);
+    // Fetch account details
+    const fetchAccountDetails = async () => {
+      try {
+        const response = await fetch("http://localhost:5200/user/account?user_id=1");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setAccountDetails(data);
+      } catch (error) {
+        console.error("Failed to fetch account details:", error);
+      }
+    };
 
-  if (loading) {
-    return <p>Loading account details...</p>;
-  }
+    // Fetch addresses using the Order API
+    const fetchAddresses = async () => {
+      try {
+        const response = await fetch("http://localhost:5200/user/addresses?user_id=1");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setAddresses(data.addresses.map((address) => address.address_details)); // Extract address details
+      } catch (error) {
+        console.error("Failed to fetch addresses:", error);
+      }
+    };
 
-  if (error) {
-    return <p>{error}</p>;
+    fetchAccountDetails();
+    fetchAddresses();
+  }, []);
+
+  const handleAddressEdit = () => {
+    setShowDropdown((prev) => !prev); // Toggle dropdown visibility
+  };
+
+  const handleSelectAddress = (address) => {
+    setAccountDetails((prev) => ({
+      ...prev,
+      default_address: address,
+    }));
+    setShowDropdown(false); // Close dropdown after selection
+  };
+
+  if (!accountDetails) {
+    return <div className="account-container">Loading...</div>;
   }
 
   return (
-    <div>
-      <h2>Account Details</h2>
-      {accountDetails && (
-        <div>
-          <p><strong>Wallet Balance:</strong> ${accountDetails.wallet_balance}</p>
-          <p><strong>Address:</strong> {accountDetails.default_address}</p>
-          <p><strong>Total Orders:</strong> {accountDetails.total_orders}</p>
+    <div className="account-container">
+      <h2>My Account</h2>
+      <div className="account-list">
+        {/* Wallet Balance */}
+        <div className="account-item">
+          <div className="account-info">
+            <h4>Wallet Balance</h4>
+            <p>${accountDetails.wallet_balance.toFixed(2)}</p>
+          </div>
+          <div className="account-action">
+            <button className="button" onClick={() => navigate("/wallet-topup")}>
+              Top Up
+            </button>
+          </div>
         </div>
-      )}
 
-      <h3>Order History</h3>
-      {orderHistory.length === 0 ? (
-        <p>No past orders found.</p>
-      ) : (
-        <ul>
-          {orderHistory.map((order, index) => (
-            <li key={index}>
-              <p><strong>Order ID:</strong> {order.id}</p>
-              <p><strong>Items:</strong> {order.items.join(', ')}</p>
-              <p><strong>Total Price:</strong> ${order.total_price}</p>
-              <p><strong>Status:</strong> {order.status}</p>
-              <hr />
-            </li>
-          ))}
-        </ul>
-      )}
+        {/* Default Address */}
+        <div className="account-item">
+          <div className="account-info">
+            <h4>Default Address</h4>
+            <p>{accountDetails.default_address}</p>
+          </div>
+          <div className="account-action">
+            <button className="button" onClick={handleAddressEdit}>
+              Select Address
+            </button>
+          </div>
+        </div>
+        {showDropdown && (
+          <ul className="dropdown-list">
+            {addresses.map((address, index) => (
+              <li
+                key={index}
+                onClick={() => handleSelectAddress(address)}
+                className="dropdown-item"
+              >
+                {address}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Total Orders */}
+        <div className="account-item">
+          <div className="account-info">
+            <h4>Total Orders</h4>
+            <p>{accountDetails.total_orders}</p>
+          </div>
+          <div className="account-action">
+            <button className="button" onClick={() => navigate("/total-orders")}>
+              View Orders
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 export default Account;

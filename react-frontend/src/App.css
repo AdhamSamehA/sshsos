@@ -9,24 +9,45 @@
 /* App Header */
 .App-header {
   background-color: #ff3366;
-  padding: 20px;
+  padding: 15px;
   color: white;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative; /* Allows positioning of user icon inside header */
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Space out elements horizontally */
+  position: relative; /* Allows positioning of icons */
 }
 
+/* Center the title */
 .App-header h1 {
+  flex: 1; /* Takes remaining space */
   margin: 0;
   font-size: 24px;
   font-weight: bold;
+  text-align: center;
+}
+
+/* Home Icon */
+.home-icon {
+  margin-left: 20px; /* Adjust based on spacing */
+  text-decoration: none;
+}
+
+.home-icon-img {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.home-icon-img:hover {
+  transform: scale(1.1); /* Slight zoom effect */
 }
 
 /* User Icon */
 .user-icon {
-  position: absolute;
-  top: 15px; /* Adjust based on your spacing needs */
-  right: 20px; /* Align with the right edge */
+  margin-right: 20px; /* Adjust based on spacing */
   text-decoration: none;
 }
 
@@ -39,44 +60,7 @@
 }
 
 .user-icon-img:hover {
-  transform: scale(1.1); /* Slight zoom effect on hover */
-}
-
-/* App Body */
-.App-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Link Styling */
-.App-link {
-  color: #ff3366;
-  text-decoration: none;
-  font-weight: bold;
-  transition: color 0.3s ease;
-}
-
-.App-link:hover {
-  color: #d12a58;
-}
-
-/* Buttons (used for future functionality like navigation) */
-.button {
-  background-color: #ff3366;
-  border: none;
-  color: white;
-  padding: 10px 20px;
-  text-transform: uppercase;
-  font-size: 14px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.button:hover {
-  background-color: #d12a58;
+  transform: scale(1.1); /* Slight zoom effect */
 }
 
 /* Responsive Design */
@@ -85,7 +69,9 @@
     font-size: 20px;
   }
 
-  .App-body {
-    padding: 10px;
+  .home-icon-img,
+  .user-icon-img {
+    width: 25px;
+    height: 25px;
   }
 }
