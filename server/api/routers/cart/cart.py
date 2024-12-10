@@ -273,17 +273,18 @@ async def empty_cart(cart_id: int, db: AsyncSession = Depends(get_db)) -> CartRe
         message="Cart emptied successfully."
     )
 
-###### 6
+
+###### 5
 @router.get("/carts/{cart_id}", response_model=ViewCartResponse)
 async def view_cart(cart_id: int, db: AsyncSession = Depends(get_db)) -> ViewCartResponse:
     """
-    Overview:
     View the contents of the specified cart.
 
     Function Logic:
-    1. Accepts cart_id as input.
-    2. Retrieves the cart details from the database, including items, quantities, total price, photos, and wallet balance.
-    3. Returns the cart details.
+    1. Validates the cart exists.
+    2. Retrieves cart details, including items, their quantities, prices, and photos.
+    3. Calculates the total price of the cart.
+    4. Retrieves the wallet balance for the user associated with the cart.
 
     Parameters:
     - cart_id (int): The ID of the cart to view.
@@ -333,13 +334,10 @@ async def view_cart(cart_id: int, db: AsyncSession = Depends(get_db)) -> ViewCar
     wallet_balance = (await db.execute(stmt)).scalar() or 0.0
 
     return ViewCartResponse(
-        cart_id=cart_id,
-        items=[
-            CartItem(item_id=1, name="Apple", quantity=3, price=1.5, photo_url="http://example.com/apple.jpg"),
-            CartItem(item_id=2, name="Banana", quantity=2, price=1.0, photo_url="http://example.com/banana.jpg")
-        ],
-        total_price=6.0,
-        wallet_balance=50.0
+        cart_id=cart.id,
+        items=items,
+        total_price=total_price,
+        wallet_balance=wallet_balance
     )
 
 ####### 6
@@ -354,5 +352,3 @@ async def submit_delivery_details(cart_id: int, request: SubmitDeliveryDetailsRe
     else:
         # Validate order slot and handle shared cart logic
         return await handle_schedule_order(cart_id, request, db)
-
-
