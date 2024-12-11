@@ -41,6 +41,24 @@ services:
       - "${SERVER_PORT}:5200"
     networks:
       - app-network
+  
+  test:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      ENVIRONMENT: testing
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["pytest", "--disable-warnings", "--maxfail=1", "-v"]
+    networks:
+      - app-network
 
   # nginx:
   #   image: nginx:latest
