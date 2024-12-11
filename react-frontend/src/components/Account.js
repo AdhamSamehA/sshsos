@@ -12,12 +12,14 @@ function Account() {
     // Fetch account details
     const fetchAccountDetails = async () => {
       try {
+        console.log("Fetching account details...");
         const response = await fetch("http://localhost:5200/user/account?user_id=1");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         setAccountDetails(data);
+        console.log("Account details fetched:", data);
       } catch (error) {
         console.error("Failed to fetch account details:", error);
       }
@@ -26,12 +28,15 @@ function Account() {
     // Fetch addresses using the Order API
     const fetchAddresses = async () => {
       try {
+        console.log("Fetching addresses...");
         const response = await fetch("http://localhost:5200/user/addresses?user_id=1");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        setAddresses(data.addresses.map((address) => address.address_details)); // Extract address details
+        const addressDetails = data.addresses.map((address) => address.address_details);
+        setAddresses(addressDetails);
+        console.log("Addresses fetched:", addressDetails);
       } catch (error) {
         console.error("Failed to fetch addresses:", error);
       }
@@ -42,10 +47,12 @@ function Account() {
   }, []);
 
   const handleAddressEdit = () => {
+    console.log("Toggling address dropdown...");
     setShowDropdown((prev) => !prev); // Toggle dropdown visibility
   };
 
   const handleSelectAddress = (address) => {
+    console.log("Address selected:", address);
     setAccountDetails((prev) => ({
       ...prev,
       default_address: address,
@@ -54,6 +61,7 @@ function Account() {
   };
 
   if (!accountDetails) {
+    console.log("Account details loading...");
     return <div className="account-container">Loading...</div>;
   }
 
@@ -68,7 +76,13 @@ function Account() {
             <p>${accountDetails.wallet_balance.toFixed(2)}</p>
           </div>
           <div className="account-action">
-            <button className="button" onClick={() => navigate("/wallet-topup")}>
+            <button
+              className="button"
+              onClick={() => {
+                console.log("Navigating to wallet top-up...");
+                navigate("/wallet-topup");
+              }}
+            >
               Top Up
             </button>
           </div>
@@ -107,7 +121,13 @@ function Account() {
             <p>{accountDetails.total_orders}</p>
           </div>
           <div className="account-action">
-            <button className="button" onClick={() => navigate("/total-orders")}>
+            <button
+              className="button"
+              onClick={() => {
+                console.log("Navigating to total orders...");
+                navigate("/total-orders");
+              }}
+            >
               View Orders
             </button>
           </div>

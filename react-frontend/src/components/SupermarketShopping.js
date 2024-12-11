@@ -20,21 +20,22 @@ const SupermarketShopping = () => {
     Beverages: "https://nawon.com.vn/wp-content/uploads/2024/01/soft-drinks.jpg",
     "Hygiene & Personal Care": "https://5.imimg.com/data5/QS/TO/MY-44941618/personal-care.jpg",
     "Cereals & Packets": "https://www.outofeden.co.uk/prodimg/4210_1_Zoom.jpg",
-    "Stationary": "https://www.simplife.ae/product_images/product_1635419586.jpg"
-
+    Stationary: "https://www.simplife.ae/product_images/product_1635419586.jpg",
   };
 
   // Fetch categories based on the supermarketId
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        console.log(`Fetching categories for supermarket ID: ${supermarketId}...`);
         const response = await axios.get(
           `http://localhost:5200/items/categories?supermarket_id=${supermarketId}`
         );
         setCategories(response.data); // Set categories from the backend
+        console.log("Categories fetched successfully:", response.data);
       } catch (err) {
         setError("Error fetching categories");
-        console.error(err);
+        console.error("Error fetching categories:", err);
       }
       setLoading(false);
     };
@@ -44,6 +45,7 @@ const SupermarketShopping = () => {
 
   // Handle category click to navigate to the items page
   const handleCategoryClick = (categoryId) => {
+    console.log(`Navigating to items page for category ID: ${categoryId}`);
     navigate(`/items/${supermarketId}/${categoryId}`); // Navigate to items page with categoryId
   };
 

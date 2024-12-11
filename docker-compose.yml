@@ -23,6 +23,7 @@ services:
 
   server:
     build: .
+    image: adhamssalama/myapp:latest
     restart: always
     env_file:
       - .env
@@ -44,6 +45,7 @@ services:
   
   test:
     build: .
+    image: adhamssalama/myapp-test:latest 
     env_file:
       - .env
     environment:

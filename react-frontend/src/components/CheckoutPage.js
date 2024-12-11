@@ -21,8 +21,10 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     const fetchCheckoutDetails = async () => {
+      console.log("Fetching checkout details...");
       try {
         if (!cartId) {
+          console.warn("Cart not found.");
           setError("Cart not found. Please create a cart first.");
           setLoading(false);
           return;
@@ -31,6 +33,7 @@ const CheckoutPage = () => {
         const cartResponse = await axios.get(
           `http://localhost:5200/carts/${cartId}`
         );
+        console.log("Cart details fetched:", cartResponse.data);
         const items = cartResponse.data.items || [];
         const basketValue = items.reduce(
           (total, item) => total + item.price * item.quantity,
@@ -44,7 +47,7 @@ const CheckoutPage = () => {
         const addressResponse = await axios.get(
           `http://localhost:5200/user/addresses?user_id=1`
         );
-
+        console.log("Addresses fetched:", addressResponse.data);
         setAddresses(addressResponse.data.addresses || []);
         if (addressResponse.data.addresses.length > 0) {
           setSelectedAddress(addressResponse.data.addresses[0].address_details);
@@ -53,12 +56,13 @@ const CheckoutPage = () => {
         const walletResponse = await axios.get(
           `http://localhost:5200/wallet/balance?user_id=1`
         );
-
+        console.log("Wallet balance fetched:", walletResponse.data);
         setWalletBalance(walletResponse.data.balance || 0);
 
         const slotsResponse = await axios.get(
           `http://localhost:5200/orders/slots?supermarket_id=1`
         );
+        console.log("Delivery slots fetched:", slotsResponse.data);
         setDeliverySlots(slotsResponse.data.available_slots || []);
       } catch (err) {
         console.error("Error fetching checkout details:", err);
@@ -71,29 +75,37 @@ const CheckoutPage = () => {
   }, [cartId]);
 
   const handlePlaceOrder = async () => {
+    console.log("Attempting to place order...");
     if (!cartId) {
+      console.warn("Cart not found.");
       alert("Cart not found. Please create a cart first.");
       return;
     }
-  
+
     const selectedAddressId = addresses.find(
       (addr) => addr.address_details === selectedAddress
     )?.address_id;
-  
+
     if (!selectedAddressId) {
+      console.warn("No valid address selected.");
       alert("Please select a valid address.");
       return;
     }
-  
+
     if (!selectedSlot) {
+      console.warn("No delivery option selected.");
       alert("Please select a delivery option.");
       return;
     }
-  
-    if (redirecting) return;
+
+    if (redirecting) {
+      console.log("Redirection in progress...");
+      return;
+    }
     setRedirecting(true);
-  
+
     try {
+      console.log("Sending request to submit delivery...");
       const response = await axios.post(
         `http://localhost:5200/carts/${cartId}/submit-delivery`,
         {
@@ -103,7 +115,8 @@ const CheckoutPage = () => {
           order_time: selectedSlot,
         }
       );
-  
+      console.log("Order placed successfully:", response.data);
+
       // Navigate to order confirmation page
       navigate("/order-confirmation", {
         state: {
@@ -119,14 +132,23 @@ const CheckoutPage = () => {
       setRedirecting(false);
     }
   };
-  
 
-  const toggleScheduleOrder = () => setShowSchedule(!showSchedule);
+  const toggleScheduleOrder = () => {
+    console.log("Toggling schedule order view...");
+    setShowSchedule(!showSchedule);
+  };
 
   const totalAmount = basketValue + deliveryFee;
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) {
+    console.log("Loading checkout page...");
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    console.error("Error state:", error);
+    return <div>{error}</div>;
+  }
 
   return (
     <div className="checkout-page">
@@ -138,6 +160,7 @@ const CheckoutPage = () => {
           <button
             className="delivery-button"
             onClick={() => {
+              console.log("Selected 'Order Now' option.");
               setSelectedSlot("now");
               setShowSchedule(false);
             }}
@@ -154,7 +177,10 @@ const CheckoutPage = () => {
             <h4>Available Slots</h4>
             <select
               value={selectedSlot}
-              onChange={(e) => setSelectedSlot(e.target.value)}
+              onChange={(e) => {
+                console.log("Selected slot:", e.target.value);
+                setSelectedSlot(e.target.value);
+              }}
             >
               {deliverySlots.map((slot, index) => (
                 <option key={index} value={slot}>
@@ -170,7 +196,10 @@ const CheckoutPage = () => {
         <h3>Address</h3>
         <select
           value={selectedAddress}
-          onChange={(e) => setSelectedAddress(e.target.value)}
+          onChange={(e) => {
+            console.log("Selected address:", e.target.value);
+            setSelectedAddress(e.target.value);
+          }}
         >
           {addresses.map((address) => (
             <option key={address.address_id} value={address.address_details}>
