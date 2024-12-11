@@ -12,3 +12,4 @@ pandas
 httpx
 pytest
 pytest-asyncio
+loguru
