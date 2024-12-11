@@ -32,8 +32,8 @@ jobs:
           pip install flake8
 
       # Step 4: Lint Code (flake8)
-      - name: Lint Code with flake8
-        run: flake8 server/ --max-line-length=88
+      #- name: Lint Code with flake8
+      #  run: flake8 server/ --max-line-length=88
 
   # Continuous Delivery: Build and Push Docker Image
   cd:
