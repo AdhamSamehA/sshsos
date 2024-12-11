@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from server.schemas import AccountDetailsResponse, OrderHistoryResponse, OrderSummary
 from server.models import User, WalletTransaction, Order, Address, SharedCartContributor
 from server.dependencies import get_db
+from loguru import logger  # Added loguru for logging
 
 router = APIRouter()
 
@@ -27,6 +28,7 @@ async def get_account_details(user_id: int, db: AsyncSession = Depends(get_db)) 
     Returns:
     - AccountDetailsResponse: Wallet balance, default address, total orders.
     """
+    logger.info(f"Fetching account details for user_id={user_id}")
     try:
         # Fetch user details including default_address_id
         stmt_user = select(User).options(selectinload(User.wallet)).where(User.id == user_id)
@@ -34,6 +36,7 @@ async def get_account_details(user_id: int, db: AsyncSession = Depends(get_db)) 
         user = user_result.scalars().first()
 
         if not user:
+            logger.warning(f"User with ID {user_id} not found.")
             raise HTTPException(status_code=404, detail="User not found.")
 
         # Fetch wallet balance
@@ -44,6 +47,8 @@ async def get_account_details(user_id: int, db: AsyncSession = Depends(get_db)) 
             wallet_result = await db.execute(stmt_wallet)
             wallet_balance = wallet_result.scalar() or 0.0
 
+        logger.info(f"Wallet balance for user_id={user_id}: {wallet_balance}")
+
         # Retrieve default address building name
         default_address = "No default address set"
         if user.default_address_id:
@@ -52,6 +57,8 @@ async def get_account_details(user_id: int, db: AsyncSession = Depends(get_db)) 
             address = address_result.scalar()
             if address:
                 default_address = address
+
+        logger.info(f"Default address for user_id={user_id}: {default_address}")
 
         # Count the number of normal orders placed by the user (exclude shared orders)
         stmt_normal_orders = select(func.count(Order.id)).where(
@@ -69,10 +76,12 @@ async def get_account_details(user_id: int, db: AsyncSession = Depends(get_db)) 
         shared_orders_result = await db.execute(stmt_shared_orders)
         shared_orders_count = shared_orders_result.scalar() or 0
 
-        # Calculate total orders
         total_orders = normal_orders_count + shared_orders_count
 
+        logger.info(f"Total orders for user_id={user_id}: {total_orders} (Normal: {normal_orders_count}, Shared: {shared_orders_count})")
+
         # Return response
+        logger.info(f"Account details for user_id={user_id} fetched successfully.")
         return AccountDetailsResponse(
             wallet_balance=wallet_balance,
             default_address=default_address,
@@ -80,4 +89,5 @@ async def get_account_details(user_id: int, db: AsyncSession = Depends(get_db)) 
         )
 
     except Exception as e:
+        logger.error(f"Failed to fetch account details for user_id={user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch account details: {str(e)}")
