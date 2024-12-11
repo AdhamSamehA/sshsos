@@ -11,18 +11,19 @@ function TotalOrders() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch("http://localhost:5200/orders?user_id=1");
-        const orders = await response.json();
+        // Fetch normal (non-shared) orders
+        const normalResponse = await fetch("http://localhost:5200/orders?user_id=1");
+        const normalData = await normalResponse.json();
 
-        // Debugging fetched orders
-        console.log("Fetched Orders:", orders);
+        // Fetch shared (scheduled) orders
+        const sharedResponse = await fetch("http://localhost:5200/shared-orders-test?user_id=1");
+        const sharedData = await sharedResponse.json();
 
-        // Categorize orders based on shared_cart_id
-        const normal = orders.filter((order) => !order.shared_cart_id);
-        const shared = orders.filter((order) => order.shared_cart_id);
+        // normalData are normal orders
+        setNormalOrders(normalData);
 
-        setNormalOrders(normal);
-        setSharedOrders(shared);
+        // sharedData are shared (scheduled) orders
+        setSharedOrders(sharedData);
       } catch (error) {
         console.error("Failed to fetch orders:", error);
       } finally {
@@ -57,7 +58,7 @@ function TotalOrders() {
           )}
         </div>
 
-        {/* Shared Orders */}
+        {/* Shared (Scheduled) Orders */}
         <div className="orders-box">
           <h3>Shared Orders</h3>
           {sharedOrders.length > 0 ? (
