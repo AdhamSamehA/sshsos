@@ -39,7 +39,7 @@ const CheckoutPage = () => {
 
         setCartItems(items);
         setBasketValue(basketValue);
-        setDeliveryFee(5);
+        setDeliveryFee(33);
 
         const addressResponse = await axios.get(
           `http://localhost:5200/user/addresses?user_id=1`

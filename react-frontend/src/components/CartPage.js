@@ -121,8 +121,8 @@ const CartPage = () => {
               <img src={item.photo_url} alt={item.name} className="item-photo" />
               <div className="item-info">
                 <h3>{item.name}</h3>
-                <p className="item-price">${item.price.toFixed(2)}</p>
-              </div>
+                <p className="item-price">AED {item.price.toFixed(2)}</p>
+                </div>
               <div className="quantity-controls">
                 <button
                   className="minus"
@@ -152,7 +152,7 @@ const CartPage = () => {
       )}
 
       <div className="total-price">
-        <h3>Total: ${totalPrice.toFixed(2)}</h3>
+      <h3>Total: AED {totalPrice.toFixed(2)}</h3>
       </div>
 
       <div className="cart-buttons">

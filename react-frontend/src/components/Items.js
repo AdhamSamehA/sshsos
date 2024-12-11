@@ -116,7 +116,7 @@ const Items = () => {
               <div className="item-details">
                 <h3>{item.name}</h3>
                 <p>{item.description}</p>
-                <p>Price: ${item.price.toFixed(2)}</p>
+                <p>Price: AED {item.price.toFixed(2)}</p>
                 <button onClick={() => addToCart(item)}>Add to Cart</button>
               </div>
             </div>
@@ -133,7 +133,7 @@ const Items = () => {
 
       {cartId && (
         <button className="view-cart-btn" onClick={viewCart}>
-          View Cart (Total: ${cartTotal.toFixed(2)})
+          View Cart (Total: AED {cartTotal.toFixed(2)})
         </button>
       )}
     </div>
