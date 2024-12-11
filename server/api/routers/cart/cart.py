@@ -170,7 +170,7 @@ async def remove_item_from_cart(cart_id: int, request: RemoveItemRequest, db: As
     if not cart_item:
         raise HTTPException(status_code=404, detail="Item not found in the cart.")
 
-    # Restore stock for the removed item
+    # Restore stock for the removed quantity
     stmt = select(StockLevel).with_for_update().where(
         StockLevel.item_id == cart_item.item_id,
         StockLevel.supermarket_id == cart.supermarket_id
@@ -181,24 +181,25 @@ async def remove_item_from_cart(cart_id: int, request: RemoveItemRequest, db: As
     if not stock:
         raise HTTPException(status_code=404, detail="Stock record not found for this item.")
 
-    # Increment the stock by the quantity removed
-    stock.quantity += cart_item.quantity
-    db.add(stock)
+    # Decrease the item's quantity or remove it if the quantity is 1
+    if cart_item.quantity > 1:
+        cart_item.quantity -= 1
+        stock.quantity += 1  # Restore 1 unit to stock
+        db.add(cart_item)  # Update cart item
+    else:
+        stock.quantity += cart_item.quantity  # Restore full quantity to stock
+        await db.delete(cart_item)  # Remove the item entirely
 
-    # Remove the cart item
-    await db.delete(cart_item)
-
-    # Commit changes
+    db.add(stock)  # Update stock
     await db.commit()
-
-    # Refresh the cart object after changes
     await db.refresh(cart)
 
     return CartResponse(
         cart_id=cart.id,
         supermarket_id=cart.supermarket_id,
-        message=f"Item {request.item_id} removed from cart successfully"
+        message=f"One quantity of item {request.item_id} removed from cart successfully"
     )
+
 
 
 

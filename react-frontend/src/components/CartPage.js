@@ -59,33 +59,30 @@ const CartPage = () => {
     }
   };
 
-  // Remove item or decrement quantity (for the minus button or "Remove" button)
-  const removeItemFromCart = async (itemId, removeCompletely = false) => {
+  // Remove one quantity from the cart
+  const removeItemFromCart = async (itemId) => {
     try {
       const item = cartItems.find((cartItem) => cartItem.item_id === itemId);
       if (!item) return;
 
-      if (item.quantity === 1 || removeCompletely) {
-        // If quantity is 1 or the user explicitly wants to remove the item
-        await axios.delete(`http://localhost:5200/carts/${cartId}/remove-item`, {
-          data: { item_id: itemId },
-        });
-        setCartItems((prevItems) =>
-          prevItems.filter((cartItem) => cartItem.item_id !== itemId)
-        );
-        setTotalPrice((prevTotal) => prevTotal - item.price * item.quantity);
-      } else {
-        // Decrease the quantity by 1
-        await axios.post(`http://localhost:5200/carts/${cartId}/add-item`, {
-          item_id: itemId,
-          quantity: -1,
-        });
+      await axios.delete(`http://localhost:5200/carts/${cartId}/remove-item`, {
+        data: { item_id: itemId },
+      });
+
+      if (item.quantity > 1) {
+        // Decrement quantity if more than one exists
         setCartItems((prevItems) =>
           prevItems.map((cartItem) =>
             cartItem.item_id === itemId
               ? { ...cartItem, quantity: cartItem.quantity - 1 }
               : cartItem
           )
+        );
+        setTotalPrice((prevTotal) => prevTotal - item.price);
+      } else {
+        // Remove the item entirely if quantity becomes zero
+        setCartItems((prevItems) =>
+          prevItems.filter((cartItem) => cartItem.item_id !== itemId)
         );
         setTotalPrice((prevTotal) => prevTotal - item.price);
       }
@@ -143,7 +140,7 @@ const CartPage = () => {
               </div>
               <button
                 className="remove-item"
-                onClick={() => removeItemFromCart(item.item_id, true)} // Remove completely
+                onClick={() => removeItemFromCart(item.item_id)} // Remove one quantity
               >
                 Remove
               </button>
