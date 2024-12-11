@@ -75,24 +75,24 @@ const CheckoutPage = () => {
       alert("Cart not found. Please create a cart first.");
       return;
     }
-
+  
     const selectedAddressId = addresses.find(
       (addr) => addr.address_details === selectedAddress
     )?.address_id;
-
+  
     if (!selectedAddressId) {
       alert("Please select a valid address.");
       return;
     }
-
+  
     if (!selectedSlot) {
       alert("Please select a delivery option.");
       return;
     }
-
+  
     if (redirecting) return;
     setRedirecting(true);
-
+  
     try {
       const response = await axios.post(
         `http://localhost:5200/carts/${cartId}/submit-delivery`,
@@ -103,30 +103,23 @@ const CheckoutPage = () => {
           order_time: selectedSlot,
         }
       );
-
-      if (response.status === 200 && response.data && response.data.cart_id && response.data.delivery_time) {
-        navigate("/order-confirmation", {
-          state: {
-            orderDetails: response.data,
-            address: selectedAddress,
-            deliveryTime: selectedSlot === "now" 
-              ? "in 15 mins" 
-              : response.data.delivery_time || `at ${selectedSlot}`
-          },
-        });
-      } else {
-        console.error("Unexpected response:", response.data);
-        alert("Failed to place the order. Please try again.");
-        setRedirecting(false);
-      }
-      
-      
+  
+      // Navigate to order confirmation page
+      navigate("/order-confirmation", {
+        state: {
+          orderDetails: response.data,
+          address: selectedAddress,
+          deliveryTime:
+            selectedSlot === "now" ? "in 15 mins" : `at ${selectedSlot}`,
+        },
+      });
     } catch (error) {
       console.error("Error placing the order:", error);
       alert("Failed to place the order. Please try again.");
       setRedirecting(false);
     }
   };
+  
 
   const toggleScheduleOrder = () => setShowSchedule(!showSchedule);
 

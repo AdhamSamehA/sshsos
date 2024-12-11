@@ -5,16 +5,19 @@ import "./TotalOrders.css";
 function TotalOrders() {
   const [normalOrders, setNormalOrders] = useState([]);
   const [sharedOrders, setSharedOrders] = useState([]);
+  const [loading, setLoading] = useState(true); // Loading state
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        // Mock fetching orders for demo
         const response = await fetch("http://localhost:5200/orders?user_id=1");
         const orders = await response.json();
 
-        // Separate orders into normal and shared
+        // Debugging fetched orders
+        console.log("Fetched Orders:", orders);
+
+        // Categorize orders based on shared_cart_id
         const normal = orders.filter((order) => !order.shared_cart_id);
         const shared = orders.filter((order) => order.shared_cart_id);
 
@@ -22,11 +25,17 @@ function TotalOrders() {
         setSharedOrders(shared);
       } catch (error) {
         console.error("Failed to fetch orders:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchOrders();
   }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="total-orders-container">
@@ -44,7 +53,7 @@ function TotalOrders() {
               </div>
             ))
           ) : (
-            <p className="no-orders-message">No orders</p>
+            <p className="no-orders-message">No normal orders</p>
           )}
         </div>
 
@@ -60,7 +69,7 @@ function TotalOrders() {
               </div>
             ))
           ) : (
-            <p className="no-orders-message">No scheduled orders</p>
+            <p className="no-orders-message">No shared orders</p>
           )}
         </div>
       </div>
