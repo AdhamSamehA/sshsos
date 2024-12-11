@@ -9,9 +9,9 @@ on:
       - main
 
 jobs:
-  # Continuous Integration: Run Linting
+  # Continuous Integration: Run Tests
   ci:
-    name: Run Linting
+    name: Run Tests
     runs-on: ubuntu-latest
 
     steps:
