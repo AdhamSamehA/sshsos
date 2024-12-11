@@ -1,17 +1,17 @@
 name,photo_url,price,description,category_id,supermarket_id
-Milk,https://example.com/milk.jpg,4.50,Fresh cow milk,1,1
-Eggs,https://example.com/eggs.jpg,5.00,Organic eggs (12 pcs),1,1
-Apple,https://example.com/apple.jpg,3.20,Fresh red apples,2,1
-Banana,https://example.com/banana.jpg,2.50,Organic bananas (1 kg),2,1
-Bread,https://example.com/bread.jpg,2.00,Whole grain bread,3,1
-Croissant,https://example.com/croissant.jpg,3.00,Buttery croissant,3,1
-Almonds,https://example.com/almonds.jpg,6.50,Raw almonds (200g),4,1
-Cashews,https://example.com/cashews.jpg,7.00,Roasted cashews (200g),4,1
-Potato Chips,https://example.com/chips.jpg,1.50,Classic salted chips,5,1
-Popcorn,https://example.com/popcorn.jpg,2.00,Butter popcorn,5,1
-Cornflakes,https://example.com/cornflakes.jpg,3.50,Healthy cornflakes (500g),6,1
-Oatmeal,https://example.com/oatmeal.jpg,4.00,Organic oatmeal (1 kg),6,1
-Toothpaste,https://example.com/toothpaste.jpg,2.50,Herbal toothpaste,7,1
-Shampoo,https://example.com/shampoo.jpg,5.00,Natural shampoo,7,1
-Notebook,https://example.com/notebook.jpg,1.00,College ruled notebook,8,1
-Pen,https://example.com/pen.jpg,0.50,Blue ballpoint pen,8,1
+Milk,https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1,4.50,Fresh cow milk,1,1
+Eggs,https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1,5.00,Organic eggs (12 pcs),1,1
+Apple,https://images.pexels.com/photos/347926/pexels-photo-347926.jpeg?auto=compress&cs=tinysrgb&w=600,3.20,Fresh red apples,2,1
+Banana,https://images.pexels.com/photos/1093038/pexels-photo-1093038.jpeg?auto=compress&cs=tinysrgb&w=600,2.50,Organic bananas (1 kg),2,1
+Bread,https://images.pexels.com/photos/209206/pexels-photo-209206.jpeg?auto=compress&cs=tinysrgb&w=600,2.00,Whole grain bread,3,1
+Croissant,https://images.pexels.com/photos/2135/food-france-morning-breakfast.jpg?auto=compress&cs=tinysrgb&w=600,3.00,Buttery croissant,3,1
+Almonds,https://images.pexels.com/photos/3997459/pexels-photo-3997459.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1,6.50,Raw almonds (200g),4,1
+Cashews,https://images.pexels.com/photos/7717492/pexels-photo-7717492.jpeg?auto=compress&cs=tinysrgb&w=600,7.00,Roasted cashews (200g),4,1
+Potato Chips,https://images.pexels.com/photos/4061441/pexels-photo-4061441.jpeg?auto=compress&cs=tinysrgb&w=600,1.50,Classic salted chips,5,1
+Popcorn,https://images.pexels.com/photos/33129/popcorn-movie-party-entertainment.jpg?auto=compress&cs=tinysrgb&w=600,2.00,Butter popcorn,5,1
+Cornflakes,https://images.pexels.com/photos/12616550/pexels-photo-12616550.jpeg?auto=compress&cs=tinysrgb&w=600,3.50,Healthy cornflakes (500g),6,1
+Oatmeal,https://images.pexels.com/photos/216951/pexels-photo-216951.jpeg?auto=compress&cs=tinysrgb&w=600,4.00,Organic oatmeal (1 kg),6,1
+Toothpaste,https://images.pexels.com/photos/4465126/pexels-photo-4465126.jpeg?auto=compress&cs=tinysrgb&w=600,2.50,Herbal toothpaste,7,1
+Shampoo,https://images.pexels.com/photos/3735627/pexels-photo-3735627.jpeg?auto=compress&cs=tinysrgb&w=600,5.00,Natural shampoo,7,1
+Notebook,https://images.pexels.com/photos/544115/pexels-photo-544115.jpeg?auto=compress&cs=tinysrgb&w=600,1.00,College ruled notebook,8,1
+Pen,https://images.pexels.com/photos/6636091/pexels-photo-6636091.jpeg?auto=compress&cs=tinysrgb&w=600,0.50,Blue ballpoint pen,8,1
