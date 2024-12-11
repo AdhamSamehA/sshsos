@@ -17,14 +17,16 @@ const Items = () => {
   // Fetch items for the current supermarket and category
   useEffect(() => {
     const fetchItems = async () => {
+      console.log(`Fetching items for supermarket ID: ${supermarketId}, category ID: ${categoryId}...`);
       try {
         const response = await axios.get(
           `http://localhost:5200/items?supermarket_id=${supermarketId}&category_id=${categoryId}`
         );
         setItems(response.data.items || []);
+        console.log("Items fetched successfully:", response.data.items);
       } catch (err) {
         setError("Error fetching items.");
-        console.error(err);
+        console.error("Error fetching items:", err);
       }
       setLoading(false);
     };
@@ -35,11 +37,16 @@ const Items = () => {
   // Fetch cart total if a cart exists
   useEffect(() => {
     const fetchCartTotal = async () => {
-      if (!cartId) return;
+      if (!cartId) {
+        console.log("No cart ID found. Skipping cart total fetch.");
+        return;
+      }
 
+      console.log(`Fetching cart total for cart ID: ${cartId}...`);
       try {
         const response = await axios.get(`http://localhost:5200/carts/${cartId}`);
         setCartTotal(response.data.total_price || 0);
+        console.log("Cart total fetched successfully:", response.data.total_price);
       } catch (err) {
         console.error("Error fetching cart total:", err);
       }
@@ -51,6 +58,7 @@ const Items = () => {
   // Create a cart if it doesn't exist
   const createCart = async () => {
     if (!cartId) {
+      console.log("No cart ID found. Creating a new cart...");
       try {
         const response = await axios.post(`http://localhost:5200/carts/create`, {
           user_id: 1,
@@ -59,6 +67,7 @@ const Items = () => {
         const newCartId = response.data.cart_id;
         setCartId(newCartId);
         localStorage.setItem("cartId", newCartId); // Persist cart ID
+        console.log("New cart created successfully. Cart ID:", newCartId);
       } catch (err) {
         console.error("Error creating cart:", err);
       }
@@ -67,19 +76,22 @@ const Items = () => {
 
   // Add item to cart
   const addToCart = async (item) => {
+    console.log(`Adding item to cart:`, item);
     try {
       await createCart();
-
+      console.log(`Adding item ID: ${item.id} to cart ID: ${cartId}...`);
       await axios.post(`http://localhost:5200/carts/${cartId}/add-item`, {
         item_id: item.id,
         quantity: 1,
       });
 
+      console.log("Item added successfully. Updating cart total...");
       const response = await axios.get(`http://localhost:5200/carts/${cartId}`);
       setCartTotal(response.data.total_price || 0);
 
       setAddedToCart(true);
       setAddedItem(item);
+      console.log("Item added to cart successfully:", item);
 
       setTimeout(() => {
         setAddedToCart(false);
@@ -91,6 +103,7 @@ const Items = () => {
   };
 
   const viewCart = () => {
+    console.log("Navigating to cart page...");
     navigate("/cart");
   };
 

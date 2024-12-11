@@ -9,12 +9,17 @@ function WalletTopUp() {
   const navigate = useNavigate();
 
   const handleTopUp = () => {
+    console.log("Top-Up initiated. Entered amount:", topUpAmount);
+
     const amount = parseFloat(topUpAmount);
     if (isNaN(amount) || amount <= 0) {
+      console.error("Invalid top-up amount:", topUpAmount);
       setSuccessMessage("Please enter a valid amount.");
       return;
     }
+
     const newBalance = currentBalance + amount;
+    console.log(`Top-Up successful. Amount: $${amount}, New balance: $${newBalance.toFixed(2)}`);
     setCurrentBalance(newBalance);
     setSuccessMessage(
       `Amount: $${amount} added successfully. New balance is: $${newBalance.toFixed(2)}`
@@ -33,7 +38,10 @@ function WalletTopUp() {
           id="topup-amount"
           placeholder="Enter amount"
           value={topUpAmount}
-          onChange={(e) => setTopUpAmount(e.target.value)}
+          onChange={(e) => {
+            console.log("Top-Up amount changed:", e.target.value);
+            setTopUpAmount(e.target.value);
+          }}
         />
         <div className="wallet-buttons">
           <button className="submit-button" onClick={handleTopUp}>
@@ -41,7 +49,10 @@ function WalletTopUp() {
           </button>
           <button
             className="cancel-button"
-            onClick={() => navigate("/")}
+            onClick={() => {
+              console.log("Top-Up canceled. Navigating to home.");
+              navigate("/");
+            }}
           >
             Cancel
           </button>
@@ -57,7 +68,10 @@ function WalletTopUp() {
               <p>
                 <span
                   className="home-link"
-                  onClick={() => navigate("/")}
+                  onClick={() => {
+                    console.log("Navigating back to Supermarkets page.");
+                    navigate("/");
+                  }}
                 >
                   Click here to return to Supermarkets.
                 </span>

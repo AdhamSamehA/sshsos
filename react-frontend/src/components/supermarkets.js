@@ -15,8 +15,10 @@ export default function Supermarkets() {
   // Fetch user default address
   const fetchUserAddress = async () => {
     try {
+      console.log("Fetching user default address...");
       const response = await axios.get(USER_ACCOUNT_API);
       setAddress(response.data.default_address);
+      console.log("User default address fetched:", response.data.default_address);
     } catch (error) {
       console.error("Error fetching user address:", error);
     }
@@ -25,8 +27,10 @@ export default function Supermarkets() {
   // Fetch supermarkets
   const fetchSupermarkets = async () => {
     try {
+      console.log("Fetching supermarkets...");
       const response = await axios.get(SUPERMARKET_FEED_API);
       setSupermarkets(response.data.supermarkets);
+      console.log("Supermarkets fetched:", response.data.supermarkets);
     } catch (error) {
       console.error("Error fetching supermarket feed:", error);
     } finally {
@@ -37,12 +41,14 @@ export default function Supermarkets() {
   // Handle Supermarket Click: Create cart and navigate to items page
   const handleSupermarketClick = async (supermarketId) => {
     try {
+      console.log(`Creating cart for supermarket ID: ${supermarketId}...`);
       const userId = localStorage.getItem("userId") || 1; // Fetch dynamic user ID or fallback to default
       const response = await axios.post(`http://localhost:5200/carts/create`, {
         user_id: userId, // Dynamic user ID
         supermarket_id: supermarketId, // Dynamic supermarket ID
       });
       const newCartId = response.data.cart_id;
+      console.log("Cart created successfully:", newCartId);
       localStorage.setItem("cartId", newCartId); // Persist cart ID
       navigate(`/supermarketshopping/${supermarketId}`); // Navigate to items page
     } catch (error) {
@@ -51,11 +57,13 @@ export default function Supermarkets() {
   };
 
   useEffect(() => {
+    console.log("Component mounted. Fetching initial data...");
     fetchUserAddress();
     fetchSupermarkets();
   }, []);
 
   if (loading) {
+    console.log("Loading supermarkets...");
     return (
       <div className="loadingContainer">
         <div className="loader">Loading...</div>

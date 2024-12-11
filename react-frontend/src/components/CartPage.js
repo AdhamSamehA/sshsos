@@ -15,8 +15,10 @@ const CartPage = () => {
   // Fetch cart data from the backend
   useEffect(() => {
     const fetchCartData = async () => {
+      console.log("Fetching cart data for cart ID:", cartId);
       try {
         if (!cartId) {
+          console.warn("Cart not found.");
           setError("Cart not found.");
           setLoading(false);
           return;
@@ -25,9 +27,10 @@ const CartPage = () => {
         const response = await axios.get(`http://localhost:5200/carts/${cartId}`);
         setCartItems(response.data.items || []);
         setTotalPrice(response.data.total_price || 0);
+        console.log("Cart data fetched successfully:", response.data);
       } catch (err) {
+        console.error("Error fetching cart data:", err);
         setError("Error fetching cart data. Please try again.");
-        console.error(err);
       }
       setLoading(false);
     };
@@ -37,12 +40,14 @@ const CartPage = () => {
 
   // Add item to cart (for the plus button)
   const addItemToCart = async (itemId) => {
+    console.log("Adding item to cart:", itemId);
     try {
       await axios.post(`http://localhost:5200/carts/${cartId}/add-item`, {
         item_id: itemId,
         quantity: 1,
       });
 
+      console.log("Item added successfully. Updating cart items...");
       setCartItems((prevItems) =>
         prevItems.map((item) =>
           item.item_id === itemId
@@ -61,14 +66,19 @@ const CartPage = () => {
 
   // Remove one quantity from the cart
   const removeItemFromCart = async (itemId) => {
+    console.log("Removing item from cart:", itemId);
     try {
       const item = cartItems.find((cartItem) => cartItem.item_id === itemId);
-      if (!item) return;
+      if (!item) {
+        console.warn("Item not found in cart:", itemId);
+        return;
+      }
 
       await axios.delete(`http://localhost:5200/carts/${cartId}/remove-item`, {
         data: { item_id: itemId },
       });
 
+      console.log("Item removed successfully. Updating cart items...");
       if (item.quantity > 1) {
         // Decrement quantity if more than one exists
         setCartItems((prevItems) =>
@@ -93,20 +103,24 @@ const CartPage = () => {
 
   // Handle emptying the cart
   const emptyCart = async () => {
+    console.log("Emptying cart...");
     try {
       await axios.delete(`http://localhost:5200/carts/${cartId}/empty`);
       setCartItems([]); // Empty cart items
       setTotalPrice(0); // Reset total price
+      console.log("Cart emptied successfully.");
     } catch (err) {
       console.error("Error emptying the cart:", err);
     }
   };
 
   if (loading) {
+    console.log("Loading cart data...");
     return <div>Loading...</div>;
   }
 
   if (error) {
+    console.error("Error state:", error);
     return <div>{error}</div>;
   }
 
@@ -122,7 +136,7 @@ const CartPage = () => {
               <div className="item-info">
                 <h3>{item.name}</h3>
                 <p className="item-price">AED {item.price.toFixed(2)}</p>
-                </div>
+              </div>
               <div className="quantity-controls">
                 <button
                   className="minus"
@@ -152,7 +166,7 @@ const CartPage = () => {
       )}
 
       <div className="total-price">
-      <h3>Total: AED {totalPrice.toFixed(2)}</h3>
+        <h3>Total: AED {totalPrice.toFixed(2)}</h3>
       </div>
 
       <div className="cart-buttons">
@@ -161,7 +175,10 @@ const CartPage = () => {
         </button>
         <button
           className="checkout"
-          onClick={() => navigate("/checkout")}
+          onClick={() => {
+            console.log("Navigating to checkout page...");
+            navigate("/checkout");
+          }}
         >
           Proceed to Checkout
         </button>

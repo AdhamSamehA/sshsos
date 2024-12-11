@@ -5,20 +5,22 @@ import "./TotalOrders.css";
 function TotalOrders() {
   const [normalOrders, setNormalOrders] = useState([]);
   const [sharedOrders, setSharedOrders] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state
-  const [selectedOrder, setSelectedOrder] = useState(null); // Selected order for details
+  const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        // Fetch normal (non-shared) orders
+        console.log("Fetching normal orders...");
         const normalResponse = await fetch("http://localhost:5200/orders?user_id=1");
         const normalData = await normalResponse.json();
+        console.log("Normal orders fetched:", normalData);
 
-        // Fetch shared (scheduled) orders
+        console.log("Fetching shared orders...");
         const sharedResponse = await fetch("http://localhost:5200/shared-orders-test?user_id=1");
         const sharedData = await sharedResponse.json();
+        console.log("Shared orders fetched:", sharedData);
 
         setNormalOrders(normalData);
         setSharedOrders(sharedData);
@@ -26,6 +28,7 @@ function TotalOrders() {
         console.error("Failed to fetch orders:", error);
       } finally {
         setLoading(false);
+        console.log("Finished fetching orders.");
       }
     };
 
@@ -34,11 +37,14 @@ function TotalOrders() {
 
   const handleOrderClick = async (order) => {
     try {
+      console.log("Fetching details for order:", order.order_id);
       if (order.shared_cart_id) {
         const response = await fetch(`http://localhost:5200/order/details?order_id=${order.order_id}`);
         const data = await response.json();
+        console.log("Shared order details fetched:", data);
         setSelectedOrder(data);
       } else {
+        console.log("Normal order selected:", order);
         setSelectedOrder(order);
       }
     } catch (error) {
@@ -47,10 +53,12 @@ function TotalOrders() {
   };
 
   const closeDetails = () => {
+    console.log("Closing order details modal.");
     setSelectedOrder(null);
   };
 
   if (loading) {
+    console.log("Orders are still loading...");
     return <div>Loading...</div>;
   }
 
