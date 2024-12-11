@@ -405,8 +405,9 @@ async def handle_schedule_order(cart_id: int, request: SubmitDeliveryDetailsRequ
         # Step 5: Fetch shared cart items
         try:
             shared_cart_items = await fetch_shared_cart_items(db, shared_cart.id)
+            print("Items In Shared Cart:")
             for item in shared_cart_items:
-                print(f"In step 5: Item ID: {item.item_id}, Quantity: {item.quantity}, Price: {item.price}, Contributor ID: {item.contributor_id}")
+                print(f"Item ID: {item.item_id}, Quantity: {item.quantity}, Price: {item.price}, Contributor ID: {item.contributor_id}")
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to fetch shared cart items: {str(e)}")
 
@@ -425,17 +426,18 @@ async def handle_schedule_order(cart_id: int, request: SubmitDeliveryDetailsRequ
                 .where(SharedCart.id == shared_cart.id)
             )
             shared_cart = shared_cart_result.scalars().first()
+            print("Items In Shared Cart:")
             for item in shared_cart_items:
-                print(f"In step 6: Item ID: {item.item_id}, Quantity: {item.quantity}, Price: {item.price}, Contributor ID: {item.contributor_id}")
+                print(f"Item ID: {item.item_id}, Quantity: {item.quantity}, Price: {item.price}, Contributor ID: {item.contributor_id}")
         
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to find or create shared cart: {str(e)}")
         
     
-        # Step 6: Deduct max delivery fee contributions and item cost contributions
         try:
+            print("Items In Shared Cart:")
             for item in shared_cart_items:
-                print(f"In step 7: Item ID: {item.item_id}, Quantity: {item.quantity}, Price: {item.price}, Contributor ID: {item.contributor_id}")
+                print(f"Item ID: {item.item_id}, Quantity: {item.quantity}, Price: {item.price}, Contributor ID: {item.contributor_id}")
             delivery_fee = shared_cart.supermarket.delivery_fee
             await process_payment(db, request.user_id, delivery_fee, shared_cart_items)
             print(f"Deducted max delivery fee contributions and item cost contributions for shared cart ID {shared_cart.id}.")
@@ -457,7 +459,6 @@ async def handle_schedule_order(cart_id: int, request: SubmitDeliveryDetailsRequ
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to find or create shared cart: {str(e)}")
         
-        # Step 7: Create or update the order
         try:
             order = await create_order(
                 db=db,
@@ -470,7 +471,6 @@ async def handle_schedule_order(cart_id: int, request: SubmitDeliveryDetailsRequ
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to create or update the order: {str(e)}")
 
-        # Step 6: Find or create shared cart
         try:
             shared_cart = await find_or_create_shared_cart(
                 db,
@@ -482,7 +482,6 @@ async def handle_schedule_order(cart_id: int, request: SubmitDeliveryDetailsRequ
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to find or create shared cart: {str(e)}")
         
-        # Step 8: Schedule automated order placement
         try:
             # Schedule automated order placement
             environment = os.getenv("ENVIRONMENT", "production")
@@ -495,16 +494,14 @@ async def handle_schedule_order(cart_id: int, request: SubmitDeliveryDetailsRequ
                 asyncio.create_task(automated_order_placement(db, request.user_id, shared_cart.id, delay=delay))
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to schedule automated order placement: {str(e)}")
-        print(f"Mode: {environment}")
-        print("Scheduled Order")
+        #print(f"Mode: {environment}")
+        #print("Scheduled Order")
 
-        # Step 9: Mark the cart as inactive
         try:
             await deactivate_cart(db, cart_id)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to deactivate cart: {str(e)}")
 
-        # Step 10: Return success response
         return SubmitDeliveryDetailsResponse(
             cart_id=shared_cart.id,
             delivery_time=request.order_time,
