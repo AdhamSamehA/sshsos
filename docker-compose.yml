@@ -45,7 +45,7 @@ services:
   
   test:
     build: .
-    image: adhamssalama/myapp-test:latest 
+    image: adhamssalama/myapp-test:latest
     env_file:
       - .env
     environment:
@@ -58,7 +58,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["pytest", "--disable-warnings", "--maxfail=1", "-v"]
+    volumes:
+      - ./server:/app/server
+      - ./tests:/app/tests
+    command: ["pytest", "-v", "--disable-warnings", "server/tests"]
     networks:
       - app-network
 
